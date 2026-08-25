@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Visualize e gerencie seus agendamentos com a Dra Verônica Paz.">
+    <title>Meus Agendamentos - Dra Verônica Reis S. Paz</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <nav class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">Ψ</span>
+                <span class="logo-text">Dra Verônica Paz</span>
+            </a>
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links">
+                <li><a href="index.html">Início</a></li>
+                <li><a href="sobre.html">Sobre</a></li>
+                <li><a href="especialidades.html">Especialidades</a></li>
+                <li><a href="certificados.html">Certificados</a></li>
+                <li><a href="depoimentos.html">Depoimentos</a></li>
+                <li><a href="blog.html">Blog</a></li>
+            </ul>
+            <a href="agendamento.html" class="btn btn-primary btn-header">Agendar consulta</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- HERO INTERNO -->
+        <section class="hero-interno section">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="index.html">Início</a> / <span>Meus Agendamentos</span>
+                </div>
+                <h1 class="page-title">Meus Agendamentos</h1>
+                <p class="page-subtitle">Visualize e gerencie suas consultas agendadas</p>
+            </div>
+        </section>
+
+        <!-- LISTA DE AGENDAMENTOS -->
+        <section class="section">
+            <div class="container">
+                <div class="agendamentos-container" id="agendamentos-container">
+                    <!-- Filtros -->
+                    <div class="agendamentos-filtros">
+                        <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
+                        <button class="filtro-btn" data-filtro="proximos">Próximos</button>
+                        <button class="filtro-btn" data-filtro="passados">Passados</button>
+                    </div>
+
+                    <!-- Lista -->
+                    <div class="agendamentos-lista" id="agendamentos-lista">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+
+                    <!-- Empty state -->
+                    <div class="empty-state" id="empty-state" style="display: none;">
+                        <div class="especialidade-icon-large">📅</div>
+                        <h3>Nenhum agendamento encontrado</h3>
+                        <p>Você ainda não tem agendamentos. Que tal agendar sua primeira consulta?</p>
+                        <a href="agendamento.html" class="btn btn-primary" style="margin-top: var(--spacing-md);">Agendar consulta</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE CONFIRMAÇÃO -->
+    <div class="modal" id="modal-cancelar">
+        <div class="modal-conteudo">
+            <div class="modal-header">
+                <h2>⚠️ Cancelar agendamento?</h2>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja cancelar este agendamento?</p>
+                <div class="resumo-agendamento" style="margin: var(--spacing-lg) 0;">
+                    <div class="resumo-item">
+                        <span class="resumo-label">Data:</span>
+                        <span class="resumo-valor" id="modal-cancelar-data"></span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Horário:</span>
+                        <span class="resumo-valor" id="modal-cancelar-horario"></span>
+                    </div>
+                </div>
+                <p style="font-size: var(--text-sm); color: var(--text-muted);">
+                    ⚠️ Esta ação não pode ser desfeita. Se desejar remarcar, será necessário fazer um novo agendamento.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="btn-nao-cancelar">Não, manter</button>
+                <button class="btn btn-primary" id="btn-confirmar-cancelar" style="background: var(--error);">Sim, cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-about">
+                <div class="footer-logo">
+                    <span class="logo-icon">Ψ</span>
+                    <span>Dra Verônica Paz</span>
+                </div>
+                <p>Psicóloga CRP 04/26.871<br>Psicoterapia baseada em evidências - TCC</p>
+                <div class="footer-social">
+                    <a href="https://instagram.com/veronicapazpsicologa" target="_blank" rel="noopener" aria-label="Instagram">
+                        📷 Instagram
+                    </a>
+                    <a href="https://wa.me/5531988836237" target="_blank" rel="noopener" aria-label="WhatsApp">
+                        📱 WhatsApp
+                    </a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Navegação</h4>
+                    <ul>
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="sobre.html">Sobre</a></li>
+                        <li><a href="especialidades.html">Especialidades</a></li>
+                        <li><a href="certificados.html">Certificados</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Atendimento</h4>
+                    <ul>
+                        <li><a href="agendamento.html">Agendar consulta</a></li>
+                        <li><a href="meus-agendamentos.html">Meus agendamentos</a></li>
+                        <li><a href="depoimentos.html">Depoimentos</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contato</h4>
+                    <ul>
+                        <li>📱 (31) 98883-6237</li>
+                        <li>📷 @veronicapazpsicologa</li>
+                        <li>💻 Atendimento online</li>
+                        <li>🏢 Atendimento presencial</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Dra Verônica Reis S. Paz - CRP 04/26.871. Todos os direitos reservados.</p>
+            <p class="footer-dev">Desenvolvido com 💜 por <a href="https://github.com/Japapaz696" target="_blank" rel="noopener">Lucas Santana</a></p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // ===== GERENCIAMENTO DE AGENDAMENTOS =====
+        let filtroAtual = 'todos';
+        let agendamentoParaCancelar = null;
+
+        async function obterMeusAgendamentos() {
+            const ids = JSON.parse(localStorage.getItem('meus_agendamento_ids') || '[]');
+            if (!ids.length) return [];
+            try {
+                // Usa endpoint público que aceita lista de IDs
+                const url = '/api/agendamentos/por-ids?ids=' + ids.join(',');
+                const dados = await apiGet(url);
+                return Array.isArray(dados) ? dados : [];
+            } catch (e) {
+                console.warn('Erro ao buscar meus agendamentos:', e);
+                return [];
+            }
+        }
+
+        function obterAgendamentos() {
+            // Legacy fallback — não usado mais, mas mantido por compatibilidade
+            const agendamentos = localStorage.getItem('agendamentos');
+            return agendamentos ? JSON.parse(agendamentos) : [];
+        }
+
+        function formatarData(dataStr) {
+            const data = new Date(dataStr + 'T00:00:00');
+            return data.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                weekday: 'long'
+            });
+        }
+
+        function formatarDataCurta(dataStr) {
+            const data = new Date(dataStr + 'T00:00:00');
+            return data.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function agendamentoPassado(dataStr, hora) {
+            const agora = new Date();
+            const dataAgendamento = new Date(dataStr + 'T' + hora + ':00');
+            return dataAgendamento < agora;
+        }
+
+        async function renderizarAgendamentos(filtro = 'todos') {
+            const agendamentos = await obterMeusAgendamentos();
+            const lista = document.getElementById('agendamentos-lista');
+            const emptyState = document.getElementById('empty-state');
+
+            lista.innerHTML = '';
+
+            // Filtrar agendamentos
+            let agendamentosFiltrados = agendamentos;
+            if (filtro === 'proximos') {
+                agendamentosFiltrados = agendamentos.filter(ag => !agendamentoPassado(ag.data, ag.hora));
+            } else if (filtro === 'passados') {
+                agendamentosFiltrados = agendamentos.filter(ag => agendamentoPassado(ag.data, ag.hora));
+            }
+
+            // Ordenar por data (mais recente primeiro)
+            agendamentosFiltrados.sort((a, b) => {
+                const dataA = new Date(a.data + 'T' + a.hora);
+                const dataB = new Date(b.data + 'T' + b.hora);
+                return dataB - dataA;
+            });
+
+            if (agendamentosFiltrados.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            agendamentosFiltrados.forEach(agendamento => {
+                const card = document.createElement('div');
+                card.className = 'agendamento-card';
+
+                const passado = agendamentoPassado(agendamento.data, agendamento.hora);
+                if (passado) {
+                    card.classList.add('passado');
+                }
+
+                const tipoIcon = agendamento.tipo === 'online' ? '💻' : '🏢';
+                const tipoTexto = agendamento.tipo === 'online' ? 'Online' : 'Presencial';
+
+                card.innerHTML = `
+                    <div class="agendamento-header">
+                        <div class="agendamento-tipo">
+                            <span class="tipo-icon-small">${tipoIcon}</span>
+                            <span>${tipoTexto}</span>
+                        </div>
+                        ${passado ? '<span class="agendamento-badge realizado">✓ Realizado</span>' : '<span class="agendamento-badge proximo">Próximo</span>'}
+                    </div>
+                    <div class="agendamento-info">
+                        <div class="info-row">
+                            <span class="info-icon">📅</span>
+                            <span>${formatarData(agendamento.data)}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-icon">⏰</span>
+                            <span>${agendamento.hora}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-icon">👤</span>
+                            <span>${agendamento.nome}</span>
+                        </div>
+                    </div>
+                    ${!passado ? `
+                        <div class="agendamento-acoes">
+                            <button class="btn btn-outline btn-cancelar" data-id="${agendamento.id}">Cancelar</button>
+                            <button class="btn btn-whatsapp" onclick="enviarWhatsApp(${agendamento.id})">
+                                <span>📱</span> WhatsApp
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+
+                lista.appendChild(card);
+            });
+
+            // Adicionar eventos aos botões de cancelar
+            document.querySelectorAll('.btn-cancelar').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const id = parseInt(btn.dataset.id);
+                    await abrirModalCancelar(id);
+                });
+            });
+        }
+
+        async function enviarWhatsApp(id) {
+            const agendamentos = await obterMeusAgendamentos();
+            const agendamento = agendamentos.find(ag => ag.id === id);
+
+            if (!agendamento) return;
+
+            const mensagem = `Olá Dra. Verônica! Sobre meu agendamento:
+
+📅 Data: ${formatarDataCurta(agendamento.data)}
+⏰ Horário: ${agendamento.hora}
+💻 Tipo: ${agendamento.tipo === 'online' ? 'Online' : 'Presencial'}
+
+👤 ${agendamento.nome}`;
+
+            const url = `https://wa.me/5531988836237?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, '_blank');
+        }
+
+        async function abrirModalCancelar(id) {
+            const agendamentos = await obterMeusAgendamentos();
+            const agendamento = agendamentos.find(ag => ag.id === id);
+
+            if (!agendamento) return;
+
+            agendamentoParaCancelar = id;
+
+            document.getElementById('modal-cancelar-data').textContent = formatarData(agendamento.data);
+            document.getElementById('modal-cancelar-horario').textContent = agendamento.hora;
+
+            document.getElementById('modal-cancelar').style.display = 'flex';
+        }
+
+        async function cancelarAgendamento() {
+            if (!agendamentoParaCancelar) return;
+
+            try {
+                // Cancela na API — o horário volta a ficar livre para outras pessoas
+                await apiDelete(`/api/agendamentos/${agendamentoParaCancelar}`);
+
+                // Remove o ID da lista local
+                const meusIds = JSON.parse(localStorage.getItem('meus_agendamento_ids') || '[]')
+                    .filter((id) => id !== agendamentoParaCancelar);
+                localStorage.setItem('meus_agendamento_ids', JSON.stringify(meusIds));
+
+                document.getElementById('modal-cancelar').style.display = 'none';
+                agendamentoParaCancelar = null;
+
+                mostrarToast('Agendamento cancelado com sucesso', 'success');
+                renderizarAgendamentos(filtroAtual);
+            } catch (e) {
+                console.error('Erro ao cancelar:', e);
+                mostrarToast('Erro ao cancelar. Tente novamente.', 'error');
+            }
+        }
+
+        // ===== FILTROS =====
+        document.querySelectorAll('.filtro-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
+                btn.classList.add('ativo');
+                filtroAtual = btn.dataset.filtro;
+                await renderizarAgendamentos(filtroAtual);
+            });
+        });
+
+        // ===== MODAL =====
+        document.getElementById('btn-nao-cancelar').addEventListener('click', () => {
+            document.getElementById('modal-cancelar').style.display = 'none';
+            agendamentoParaCancelar = null;
+        });
+
+        document.getElementById('btn-confirmar-cancelar').addEventListener('click', () => cancelarAgendamento());
+
+        document.getElementById('modal-cancelar').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-cancelar') {
+                e.target.style.display = 'none';
+                agendamentoParaCancelar = null;
+            }
+        });
+
+        // ===== INICIALIZAÇÃO =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            await renderizarAgendamentos();
+        });
+    </script>
+</body>
+</html>

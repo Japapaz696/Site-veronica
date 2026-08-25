@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Área administrativa - Gerenciar agendamentos">
+    <title>Área Administrativa - Dra Verônica Paz</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- LOGIN SIMPLES -->
+    <div class="login-container" id="login-container">
+        <div class="login-card">
+            <div class="especialidade-icon-large">🔐</div>
+            <h2>Área Administrativa</h2>
+            <p style="color: var(--text-muted); margin-bottom: var(--spacing-lg);">Digite a senha para acessar</p>
+            <form id="form-login">
+                <div class="form-group">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" required autofocus>
+                    <span class="form-error" id="erro-senha"></span>
+                </div>
+                <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Entrar</button>
+            </form>
+            <p style="font-size: var(--text-sm); color: var(--text-muted); margin-top: var(--spacing-md);">
+                💡 Senha padrão: <code>veronica2026</code><br>
+                <small>(Alterar no código: linha 318)</small>
+            </p>
+        </div>
+    </div>
+
+    <!-- ÁREA ADMINISTRATIVA -->
+    <div class="admin-container" id="admin-container" style="display: none;">
+        <header class="admin-header-new">
+            <div class="container admin-header-content">
+                <div class="admin-profile">
+                    <div class="profile-symbol">Ψ</div>
+                    <div class="profile-info">
+                        <h1>Olá, Dra. Verônica Reis! ✨</h1>
+                        <p class="profile-credentials">CRP 04/26.871 • Psicóloga Clínica • TCC</p>
+                    </div>
+                </div>
+                <div class="admin-quick-actions">
+                    <button class="btn-quick" id="btn-hoje">
+                        <span class="quick-badge" id="badge-hoje" style="display: none;">0</span>
+                        📋 Hoje
+                    </button>
+                    <button class="btn-quick" id="btn-novo-rapido">➕ Novo</button>
+                    <button class="btn-quick" id="btn-semana">📅 Semana</button>
+                    <button class="btn-sair-new" id="btn-sair">🚪 Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <div class="container">
+                <!-- Estatísticas -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div>
+                            <div class="stat-valor" id="stat-total">0</div>
+                            <div class="stat-label">Total de agendamentos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏰</div>
+                        <div>
+                            <div class="stat-valor" id="stat-hoje">0</div>
+                            <div class="stat-label">Hoje</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div>
+                            <div class="stat-valor" id="stat-semana">0</div>
+                            <div class="stat-label">Esta semana</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div>
+                            <div class="stat-valor" id="stat-mes">0</div>
+                            <div class="stat-label">Este mês</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TIMELINE DO DIA -->
+                <div class="admin-section timeline-section">
+                    <div class="section-header-admin">
+                        <h2>🌅 Sua Agenda de Hoje</h2>
+                        <div class="timeline-nav">
+                            <button class="btn-timeline active" data-dia="hoje">Hoje</button>
+                            <button class="btn-timeline" data-dia="amanha">Amanhã</button>
+                            <button class="btn-timeline" data-dia="semana">Esta Semana</button>
+                        </div>
+                    </div>
+
+                    <div class="timeline-container">
+                        <div class="timeline-date-info">
+                            <span id="timeline-data-completa">Carregando...</span>
+                        </div>
+
+                        <div class="timeline-grid" id="timeline-grid">
+                            <!-- Preenchido via JavaScript -->
+                        </div>
+
+                        <div class="timeline-empty" id="timeline-empty" style="display: none;">
+                            <div class="especialidade-icon-large">🎉</div>
+                            <h3>Nenhuma consulta hoje</h3>
+                            <p>Aproveite para descansar ou revisar materiais!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adicionar novo agendamento -->
+                <div class="admin-section">
+                    <div class="section-header-admin">
+                        <h2>➕ Adicionar Novo Agendamento</h2>
+                        <button class="btn btn-primary" id="btn-toggle-form">+ Adicionar</button>
+                    </div>
+
+                    <div class="form-adicionar" id="form-adicionar" style="display: none;">
+                        <form id="form-agendamento">
+                            <input type="hidden" id="agendamento-id">
+
+                            <h3 style="margin-bottom: var(--spacing-md);" id="form-titulo">Novo Agendamento</h3>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-md);">
+                                <div class="form-group">
+                                    <label for="form-nome">Nome do paciente *</label>
+                                    <input type="text" id="form-nome" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="form-tipo">Tipo de atendimento *</label>
+                                    <select id="form-tipo" required>
+                                        <option value="online">💻 Online</option>
+                                        <option value="presencial">🏢 Presencial</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="form-data">Data *</label>
+                                    <input type="date" id="form-data" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="form-hora">Horário *</label>
+                                    <select id="form-hora" required>
+                                        <option value="09:00">09:00</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="17:00">17:00</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="form-telefone">Telefone (WhatsApp)</label>
+                                    <input type="tel" id="form-telefone" placeholder="(31) 98765-4321">
+                                </div>
+                                <div class="form-group">
+                                    <label for="form-email">E-mail</label>
+                                    <input type="email" id="form-email">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="form-observacao">Observações / Motivo da consulta</label>
+                                <textarea id="form-observacao" rows="3" placeholder="Anote aqui informações importantes sobre o paciente ou motivo da consulta"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="form-confirmado">
+                                    Consulta confirmada com o paciente
+                                </label>
+                            </div>
+                            <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-md);">
+                                <button type="submit" class="btn btn-primary" id="btn-salvar">Salvar agendamento</button>
+                                <button type="button" class="btn btn-outline" id="btn-cancelar-form">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Lista de agendamentos -->
+                <div class="admin-section">
+                    <div class="section-header-admin">
+                        <h2>📋 Todos os Agendamentos</h2>
+                        <div class="agendamentos-filtros">
+                            <button class="filtro-btn ativo" data-filtro="todos">Todos</button>
+                            <button class="filtro-btn" data-filtro="proximos">Próximos</button>
+                            <button class="filtro-btn" data-filtro="hoje">Hoje</button>
+                            <button class="filtro-btn" data-filtro="passados">Realizados</button>
+                        </div>
+                    </div>
+
+                    <!-- Busca -->
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <input type="text" id="busca-paciente" placeholder="🔍 Buscar por nome do paciente..." style="width: 100%; padding: var(--spacing-sm) var(--spacing-md); border: 2px solid var(--line); border-radius: 8px; font-size: var(--text-base);">
+                    </div>
+
+                    <div class="admin-agendamentos-lista" id="admin-lista">
+                        <!-- Preenchido via JS -->
+                    </div>
+
+                    <div class="empty-state" id="admin-empty" style="display: none;">
+                        <div class="especialidade-icon-large">📅</div>
+                        <h3>Nenhum agendamento encontrado</h3>
+                        <p>Adicione o primeiro agendamento usando o botão acima</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE DETALHES DO PACIENTE -->
+    <div class="modal" id="modal-detalhes">
+        <div class="modal-conteudo" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>👤 Detalhes do Paciente</h2>
+            </div>
+            <div class="modal-body" id="detalhes-conteudo">
+                <!-- Preenchido via JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="fecharModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // ===== AUTENTICAÇÃO =====
+        const SENHA_ADMIN = 'veronica2026'; // ⚠️ MUDAR ESSA SENHA!
+
+        document.getElementById('form-login').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const senha = document.getElementById('senha').value;
+
+            if (senha === SENHA_ADMIN) {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('admin-container').style.display = 'block';
+                sessionStorage.setItem('admin_logged', 'true');
+                sessionStorage.setItem('admin_password', senha); // usado nos headers da API
+                carregarDashboard();
+            } else {
+                document.getElementById('erro-senha').textContent = 'Senha incorreta';
+                mostrarToast('Senha incorreta', 'error');
+            }
+        });
+
+        // Verificar se já está logado
+        if (sessionStorage.getItem('admin_logged') === 'true') {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('admin-container').style.display = 'block';
+            carregarDashboard();
+        }
+
+        // Sair
+        document.getElementById('btn-sair').addEventListener('click', () => {
+            if (confirm('Deseja sair da área administrativa?')) {
+                sessionStorage.removeItem('admin_logged');
+                sessionStorage.removeItem('admin_password');
+                location.reload();
+            }
+        });
+
+        // ===== GERENCIAMENTO DE AGENDAMENTOS =====
+        let filtroAtualAdmin = 'todos';
+        let buscaAtual = '';
+        let agendamentosCache = []; // lista vinda da API
+
+        // Busca a lista completa na API (requer senha salva no sessionStorage)
+        async function carregarAgendamentosDaAPI() {
+            try {
+                const dados = await apiGet('/api/agendamentos', true);
+                agendamentosCache = Array.isArray(dados) ? dados : [];
+            } catch (e) {
+                console.warn('API admin indisponível:', e);
+                const msg = (e && e.message) || '';
+                if (msg.includes('401') || msg.includes('403')) {
+                    mostrarToast('Sessão expirada. Faça login novamente.', 'error');
+                } else {
+                    mostrarToast('Não foi possível carregar os agendamentos. O servidor está rodando?', 'error');
+                }
+                agendamentosCache = [];
+            }
+            return agendamentosCache;
+        }
+
+        function obterAgendamentos() {
+            return agendamentosCache;
+        }
+
+        function formatarData(dataStr) {
+            const data = new Date(dataStr + 'T00:00:00');
+            return data.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                weekday: 'long'
+            });
+        }
+
+        function formatarDataCurta(dataStr) {
+            const data = new Date(dataStr + 'T00:00:00');
+            return data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function agendamentoPassado(dataStr, hora) {
+            const agora = new Date();
+            const dataAgendamento = new Date(dataStr + 'T' + hora + ':00');
+            return dataAgendamento < agora;
+        }
+
+        function ehHoje(dataStr) {
+            const hoje = new Date();
+            const data = new Date(dataStr + 'T00:00:00');
+            return data.getDate() === hoje.getDate() &&
+                   data.getMonth() === hoje.getMonth() &&
+                   data.getFullYear() === hoje.getFullYear();
+        }
+
+        function calcularEstatisticas() {
+            const agendamentos = obterAgendamentos();
+            const agora = new Date();
+            const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+
+            const inicioSemana = new Date(agora);
+            inicioSemana.setDate(agora.getDate() - agora.getDay());
+            inicioSemana.setHours(0, 0, 0, 0);
+
+            const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+
+            const stats = {
+                total: agendamentos.length,
+                hoje: 0,
+                semana: 0,
+                mes: 0
+            };
+
+            agendamentos.forEach(ag => {
+                const dataAg = new Date(ag.data + 'T00:00:00');
+
+                if (ehHoje(ag.data)) {
+                    stats.hoje++;
+                }
+
+                if (dataAg >= inicioSemana) {
+                    stats.semana++;
+                }
+
+                if (dataAg >= inicioMes) {
+                    stats.mes++;
+                }
+            });
+
+            return stats;
+        }
+
+        function atualizarEstatisticas() {
+            const stats = calcularEstatisticas();
+            document.getElementById('stat-total').textContent = stats.total;
+            document.getElementById('stat-hoje').textContent = stats.hoje;
+            document.getElementById('stat-semana').textContent = stats.semana;
+            document.getElementById('stat-mes').textContent = stats.mes;
+
+            // Atualizar badge do botão "Hoje"
+            atualizarBadges();
+        }
+
+        function atualizarBadges() {
+            const stats = calcularEstatisticas();
+            const badgeHoje = document.getElementById('badge-hoje');
+            badgeHoje.textContent = stats.hoje;
+            badgeHoje.style.display = stats.hoje > 0 ? 'block' : 'none';
+        }
+
+        // ===== TIMELINE DO DIA =====
+        let diaTimelineAtual = 'hoje';
+
+        function formatarDataISO(data) {
+            const ano = data.getFullYear();
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const dia = String(data.getDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
+        }
+
+        function formatarDataCompleta(data) {
+            const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+            return `${diasSemana[data.getDay()]}, ${data.getDate()} de ${meses[data.getMonth()]} de ${data.getFullYear()}`;
+        }
+
+        function renderizarTimeline(dia = 'hoje') {
+            diaTimelineAtual = dia;
+
+            // Sempre recarrega do servidor para exibir dados atualizados
+            carregarAgendamentosDaAPI().then(() => {
+                const container = document.getElementById('timeline-grid');
+                const emptyState = document.getElementById('timeline-empty');
+                const dataInfo = document.getElementById('timeline-data-completa');
+
+                // Determinar data a exibir
+                let dataAlvo = new Date();
+                if (dia === 'amanha') {
+                    dataAlvo.setDate(dataAlvo.getDate() + 1);
+                } else if (dia === 'semana') {
+                    // Para "Esta Semana", mostrar apenas hoje por enquanto
+                    // Pode ser expandido futuramente para mostrar vários dias
+                }
+
+                const dataStr = formatarDataISO(dataAlvo);
+                dataInfo.textContent = formatarDataCompleta(dataAlvo);
+
+                // Obter agendamentos do dia
+                const agendamentos = obterAgendamentos();
+                const agendamentosDoDia = agendamentos.filter(ag => ag.data === dataStr);
+
+                // Horários de atendimento
+                const horarios = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+                const agora = new Date();
+                const horaAtual = agora.getHours();
+                const minutoAtual = agora.getMinutes();
+
+                container.innerHTML = '';
+
+                horarios.forEach((hora, index) => {
+                    const [h] = hora.split(':').map(Number);
+
+                    // Verificar se é "agora"
+                    const ehAgora = ehHoje(dataStr) && horaAtual === h;
+                    const passou = ehHoje(dataStr) && (horaAtual > h || (horaAtual === h && minutoAtual > 30));
+
+                    // Linha "AGORA" antes do horário atual
+                    if (ehAgora && minutoAtual < 30 && index > 0) {
+                        const linhaAgora = criarLinhaAgora();
+                        container.appendChild(linhaAgora);
+                    }
+
+                    // Buscar agendamento neste horário
+                    const agendamento = agendamentosDoDia.find(ag => ag.hora === hora);
+
+                    // Criar slot
+                    const slot = criarSlotTimeline(hora, agendamento, passou, dataStr);
+                    container.appendChild(slot);
+
+                    // Linha "AGORA" depois do horário atual
+                    if (ehAgora && minutoAtual >= 30) {
+                        const linhaAgora = criarLinhaAgora();
+                        container.appendChild(linhaAgora);
+                    }
+                });
+
+                // Mostrar empty state se não houver consultas
+                if (agendamentosDoDia.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                }
+            });
+        }
+
+        function criarSlotTimeline(hora, agendamento, passou, dataStr) {
+            const slot = document.createElement('div');
+
+            if (agendamento) {
+                slot.className = 'timeline-slot ocupado' + (passou ? ' passado' : '');
+                const tipoIcon = agendamento.tipo === 'online' ? '💻' : '🏢';
+                slot.innerHTML = `
+                    <div class="timeline-horario">${hora}</div>
+                    <div class="timeline-paciente">
+                        <span style="font-size: 1.5rem;">${tipoIcon}</span>
+                        <div class="timeline-paciente-info">
+                            <div class="timeline-paciente-nome">${agendamento.nome}</div>
+                            <div class="timeline-paciente-tipo">${agendamento.tipo === 'online' ? 'Atendimento Online' : 'Atendimento Presencial'}</div>
+                        </div>
+                    </div>
+                `;
+                slot.onclick = () => verDetalhes(agendamento.id);
+            } else {
+                slot.className = 'timeline-slot livre';
+                slot.innerHTML = `
+                    <div class="timeline-horario">${hora}</div>
+                    <div class="timeline-paciente" style="color: var(--text-muted);">
+                        <span style="font-size: 1.25rem;">⭕</span>
+                        <span>Horário livre - Clique para agendar</span>
+                    </div>
+                `;
+                slot.onclick = () => abrirFormularioComHorario(hora, dataStr);
+            }
+
+            return slot;
+        }
+
+        function criarLinhaAgora() {
+            const linha = document.createElement('div');
+            linha.className = 'timeline-agora';
+            const agora = new Date();
+            linha.innerHTML = `<span>🕐 ${agora.getHours()}:${String(agora.getMinutes()).padStart(2, '0')} - AGORA</span>`;
+            return linha;
+        }
+
+        function abrirFormularioComHorario(hora, data) {
+            document.getElementById('form-adicionar').style.display = 'block';
+            document.getElementById('form-hora').value = hora;
+            document.getElementById('form-data').value = data;
+            document.getElementById('form-nome').focus();
+            window.scrollTo({ top: document.getElementById('form-adicionar').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        // ===== EVENT LISTENERS TIMELINE =====
+        document.querySelectorAll('.btn-timeline').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-timeline').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderizarTimeline(btn.dataset.dia);
+            });
+        });
+
+        // Botões de ação rápida
+        document.getElementById('btn-hoje').addEventListener('click', () => {
+            document.querySelector('[data-dia="hoje"]').click();
+            document.getElementById('timeline-grid').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        document.getElementById('btn-novo-rapido').addEventListener('click', () => {
+            document.getElementById('btn-toggle-form').click();
+        });
+
+        document.getElementById('btn-semana').addEventListener('click', () => {
+            document.querySelector('[data-dia="semana"]').click();
+            document.getElementById('timeline-grid').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // ===== FORMULÁRIO =====
+        document.getElementById('btn-toggle-form').addEventListener('click', () => {
+            limparFormulario();
+            const form = document.getElementById('form-adicionar');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('btn-cancelar-form').addEventListener('click', () => {
+            document.getElementById('form-adicionar').style.display = 'none';
+            limparFormulario();
+        });
+
+        function limparFormulario() {
+            document.getElementById('form-agendamento').reset();
+            document.getElementById('agendamento-id').value = '';
+            document.getElementById('form-titulo').textContent = 'Novo Agendamento';
+            document.getElementById('btn-salvar').textContent = 'Salvar agendamento';
+        }
+
+        document.getElementById('form-agendamento').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('agendamento-id').value;
+            const agendamento = {
+                id: id ? parseInt(id) : Date.now(),
+                nome: document.getElementById('form-nome').value,
+                tipo: document.getElementById('form-tipo').value,
+                data: document.getElementById('form-data').value,
+                hora: document.getElementById('form-hora').value,
+                telefone: document.getElementById('form-telefone').value,
+                email: document.getElementById('form-email').value,
+                mensagem: document.getElementById('form-observacao').value,
+                confirmado: document.getElementById('form-confirmado').checked,
+                criadoEm: new Date().toISOString()
+            };
+
+            try {
+                if (id) {
+                    await apiPut(`/api/agendamentos/${id}`, agendamento);
+                    mostrarToast('Agendamento atualizado!', 'success');
+                } else {
+                    await apiPost('/api/agendamentos', agendamento);
+                    mostrarToast('Agendamento adicionado!', 'success');
+                }
+                document.getElementById('form-adicionar').style.display = 'none';
+                limparFormulario();
+                await carregarDashboard();
+            } catch (error) {
+                console.error('Erro no formulário admin:', error);
+                const msg = (error && error.message) || '';
+                mostrarToast(msg.includes('ocupado') ? 'Horário já ocupado!' : 'Erro ao salvar. Verifique o servidor.', 'error');
+            }
+        });
+
+        // ===== RENDERIZAR LISTA =====
+        function renderizarAgendamentosAdmin(filtro = filtroAtualAdmin) {
+            filtroAtualAdmin = filtro;
+            const agendamentos = obterAgendamentos();
+            const lista = document.getElementById('admin-lista');
+            const empty = document.getElementById('admin-empty');
+
+            lista.innerHTML = '';
+
+            // Filtrar
+            let agendamentosFiltrados = agendamentos;
+
+            if (filtro === 'proximos') {
+                agendamentosFiltrados = agendamentos.filter(ag => !agendamentoPassado(ag.data, ag.hora));
+            } else if (filtro === 'passados') {
+                agendamentosFiltrados = agendamentos.filter(ag => agendamentoPassado(ag.data, ag.hora));
+            } else if (filtro === 'hoje') {
+                agendamentosFiltrados = agendamentos.filter(ag => ehHoje(ag.data));
+            } else if (filtro === 'data') {
+                agendamentosFiltrados = agendamentos.filter(ag => ag.data === buscaAtual);
+            }
+
+            // Busca por nome
+            if (buscaAtual && filtro !== 'data') {
+                agendamentosFiltrados = agendamentosFiltrados.filter(ag =>
+                    ag.nome.toLowerCase().includes(buscaAtual.toLowerCase())
+                );
+            }
+
+            // Ordenar
+            agendamentosFiltrados.sort((a, b) => {
+                const dataA = new Date(a.data + 'T' + a.hora);
+                const dataB = new Date(b.data + 'T' + b.hora);
+                return dataB - dataA;
+            });
+
+            if (agendamentosFiltrados.length === 0) {
+                empty.style.display = 'block';
+                atualizarEstatisticas();
+                return;
+            }
+
+            empty.style.display = 'none';
+
+            agendamentosFiltrados.forEach(ag => {
+                const passado = agendamentoPassado(ag.data, ag.hora);
+                const tipoIcon = ag.tipo === 'online' ? '💻' : '🏢';
+                const veioDaSite = !ag.confirmado && ag.confirmado !== false; // Não tem o campo confirmado = veio do site
+
+                const card = document.createElement('div');
+                card.className = 'admin-agendamento-card' + (passado ? ' passado' : '');
+                card.innerHTML = `
+                    <div class="agendamento-header" style="margin-bottom: var(--spacing-sm);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span class="tipo-icon-small">${tipoIcon}</span>
+                            <strong style="font-size: var(--text-xl);">${ag.nome}</strong>
+                            ${veioDaSite ? '<span style="background: #e3f2fd; color: #1976d2; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: var(--text-xs); font-weight: 600;">🌐 Do site</span>' : ''}
+                            ${ag.confirmado ? '<span style="color: var(--success); font-size: var(--text-sm);">✓ Confirmado</span>' : ''}
+                        </div>
+                        ${passado ? '<span class="agendamento-badge realizado">✓ Realizado</span>' : (ehHoje(ag.data) ? '<span class="agendamento-badge" style="background: var(--success); color: white;">🔔 Hoje</span>' : '<span class="agendamento-badge proximo">Próximo</span>')}
+                    </div>
+                    <div class="admin-agendamento-info">
+                        <div><strong>📅 Data:</strong> ${formatarData(ag.data)}</div>
+                        <div><strong>⏰ Horário:</strong> ${ag.hora}</div>
+                        ${ag.telefone ? `<div><strong>📱 Telefone:</strong> <a href="tel:${ag.telefone}" style="color: var(--accent);">${ag.telefone}</a></div>` : ''}
+                        ${ag.email ? `<div><strong>📧 Email:</strong> <a href="mailto:${ag.email}" style="color: var(--accent);">${ag.email}</a></div>` : ''}
+                        ${ag.mensagem ? `<div><strong>💬 Observações:</strong> ${ag.mensagem}</div>` : ''}
+                    </div>
+                    <div class="admin-agendamento-acoes">
+                        <button class="btn btn-primary btn-small" onclick="verDetalhes(${ag.id})">👁️ Detalhes</button>
+                        <button class="btn btn-outline btn-small" onclick="editarAgendamento(${ag.id})">✏️ Editar</button>
+                        ${ag.telefone ? `<button class="btn btn-whatsapp btn-small" onclick="contatarPaciente('${ag.telefone}', '${ag.nome}', '${ag.data}', '${ag.hora}')">📱 WhatsApp</button>` : ''}
+                        <button class="btn btn-outline btn-small" style="color: var(--error); border-color: var(--error);" onclick="excluirAgendamento(${ag.id})">🗑️ Excluir</button>
+                    </div>
+                `;
+                lista.appendChild(card);
+            });
+
+            atualizarEstatisticas();
+        }
+
+        // Filtros
+        document.querySelectorAll('.filtro-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('ativo'));
+                btn.classList.add('ativo');
+                buscaAtual = '';
+                document.getElementById('busca-paciente').value = '';
+                renderizarAgendamentosAdmin(btn.dataset.filtro);
+            });
+        });
+
+        // Busca
+        document.getElementById('busca-paciente').addEventListener('input', (e) => {
+            buscaAtual = e.target.value;
+            renderizarAgendamentosAdmin();
+        });
+
+        // ===== FUNÇÕES GLOBAIS =====
+        window.contatarPaciente = (telefone, nome, data, hora) => {
+            const tel = telefone.replace(/\D/g, '');
+            const mensagem = `Olá ${nome}! Confirmando sua consulta para ${formatarDataCurta(data)} às ${hora}. Qualquer dúvida, estou à disposição!`;
+            window.open(`https://wa.me/${tel}?text=${encodeURIComponent(mensagem)}`, '_blank');
+        };
+
+        window.excluirAgendamento = async (id) => {
+            if (confirm('⚠️ Tem certeza que deseja excluir este agendamento?\n\nEsta ação não pode ser desfeita.')) {
+                try {
+                    await apiDelete(`/api/agendamentos/${id}`);
+                    mostrarToast('Agendamento excluído', 'success');
+                    await carregarDashboard();
+                } catch (e) {
+                    console.error('Erro ao excluir:', e);
+                    mostrarToast('Erro ao excluir agendamento.', 'error');
+                }
+            }
+        };
+
+        window.editarAgendamento = (id) => {
+            const agendamentos = obterAgendamentos();
+            const ag = agendamentos.find(a => a.id === id);
+
+            if (!ag) return;
+
+            document.getElementById('agendamento-id').value = ag.id;
+            document.getElementById('form-nome').value = ag.nome;
+            document.getElementById('form-tipo').value = ag.tipo;
+            document.getElementById('form-data').value = ag.data;
+            document.getElementById('form-hora').value = ag.hora;
+            document.getElementById('form-telefone').value = ag.telefone || '';
+            document.getElementById('form-email').value = ag.email || '';
+            document.getElementById('form-observacao').value = ag.mensagem || '';
+            document.getElementById('form-confirmado').checked = ag.confirmado || false;
+
+            document.getElementById('form-titulo').textContent = 'Editar Agendamento';
+            document.getElementById('btn-salvar').textContent = 'Atualizar agendamento';
+            document.getElementById('form-adicionar').style.display = 'block';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.verDetalhes = (id) => {
+            const agendamentos = obterAgendamentos();
+            const ag = agendamentos.find(a => a.id === id);
+
+            if (!ag) return;
+
+            const passado = agendamentoPassado(ag.data, ag.hora);
+            const tipoTexto = ag.tipo === 'online' ? '💻 Atendimento Online' : '🏢 Atendimento Presencial';
+
+            const detalhes = `
+                <div style="display: grid; gap: var(--spacing-md);">
+                    <div>
+                        <h3 style="font-size: var(--text-2xl); margin-bottom: var(--spacing-xs);">${ag.nome}</h3>
+                        <p style="color: var(--text-muted);">${tipoTexto}</p>
+                    </div>
+
+                    <div class="resumo-agendamento">
+                        <div class="resumo-item">
+                            <span class="resumo-label">Data:</span>
+                            <span class="resumo-valor">${formatarData(ag.data)}</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">Horário:</span>
+                            <span class="resumo-valor">${ag.hora}</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">Status:</span>
+                            <span class="resumo-valor">${passado ? '✅ Realizado' : (ehHoje(ag.data) ? '🔔 Hoje' : '⏰ Próximo')}</span>
+                        </div>
+                        <div class="resumo-item">
+                            <span class="resumo-label">Confirmado:</span>
+                            <span class="resumo-valor">${ag.confirmado ? '✓ Sim' : '⏳ Aguardando'}</span>
+                        </div>
+                    </div>
+
+                    ${ag.telefone || ag.email ? `
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-sm);">Contato</h4>
+                            ${ag.telefone ? `<p>📱 <a href="tel:${ag.telefone}" style="color: var(--accent);">${ag.telefone}</a></p>` : ''}
+                            ${ag.email ? `<p>📧 <a href="mailto:${ag.email}" style="color: var(--accent);">${ag.email}</a></p>` : ''}
+                        </div>
+                    ` : ''}
+
+                    ${ag.mensagem ? `
+                        <div>
+                            <h4 style="margin-bottom: var(--spacing-sm);">Observações</h4>
+                            <p style="color: var(--text-light); line-height: 1.7;">${ag.mensagem}</p>
+                        </div>
+                    ` : ''}
+
+                    <div style="padding-top: var(--spacing-md); border-top: 1px solid var(--line);">
+                        <p style="font-size: var(--text-sm); color: var(--text-muted);">
+                            ID: ${ag.id}<br>
+                            Criado em: ${new Date(ag.criadoEm).toLocaleString('pt-BR')}
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detalhes-conteudo').innerHTML = detalhes;
+            document.getElementById('modal-detalhes').style.display = 'flex';
+        };
+
+        window.fecharModal = () => {
+            document.getElementById('modal-detalhes').style.display = 'none';
+        };
+
+        document.getElementById('modal-detalhes').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-detalhes') {
+                fecharModal();
+            }
+        });
+
+        async function carregarDashboard() {
+            await carregarAgendamentosDaAPI();
+            renderizarTimeline('hoje');
+            renderizarAgendamentosAdmin();
+        }
+
+        // Data mínima = hoje
+        document.getElementById('form-data').min = new Date().toISOString().split('T')[0];
+
+        // Máscara telefone
+        document.getElementById('form-telefone').addEventListener('input', (e) => {
+            let valor = e.target.value.replace(/\D/g, '');
+            if (valor.length <= 11) {
+                valor = valor.replace(/^(\d{2})(\d)/g, '($1) $2');
+                valor = valor.replace(/(\d)(\d{4})$/, '$1-$2');
+            }
+            e.target.value = valor;
+        });
+    </script>
+</body>
+</html>
