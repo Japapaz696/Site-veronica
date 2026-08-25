@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Agende sua consulta com a Dra Verônica Paz. Atendimento online e presencial. Sistema de agendamento fácil e rápido.">
+    <title>Agendamento - Dra Verônica Reis S. Paz</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <nav class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">Ψ</span>
+                <span class="logo-text">Dra Verônica Paz</span>
+            </a>
+            <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links">
+                <li><a href="index.html">Início</a></li>
+                <li><a href="sobre.html">Sobre</a></li>
+                <li><a href="especialidades.html">Especialidades</a></li>
+                <li><a href="certificados.html">Certificados</a></li>
+                <li><a href="depoimentos.html">Depoimentos</a></li>
+                <li><a href="blog.html">Blog</a></li>
+            </ul>
+            <a href="agendamento.html" class="btn btn-primary btn-header">Agendar consulta</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- HERO INTERNO -->
+        <section class="hero-interno section">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="index.html">Início</a> / <span>Agendamento</span>
+                </div>
+                <h1 class="page-title">Agende sua consulta</h1>
+                <p class="page-subtitle">Siga os passos abaixo para agendar seu atendimento</p>
+            </div>
+        </section>
+
+        <!-- PROGRESSO -->
+        <section class="section">
+            <div class="container">
+                <div class="agendamento-container">
+                    <!-- Indicador de etapas -->
+                    <div class="etapas-indicador">
+                        <div class="etapa etapa-ativa" data-etapa="1">
+                            <div class="etapa-numero">1</div>
+                            <span class="etapa-label">Tipo</span>
+                        </div>
+                        <div class="etapa-linha"></div>
+                        <div class="etapa" data-etapa="2">
+                            <div class="etapa-numero">2</div>
+                            <span class="etapa-label">Data</span>
+                        </div>
+                        <div class="etapa-linha"></div>
+                        <div class="etapa" data-etapa="3">
+                            <div class="etapa-numero">3</div>
+                            <span class="etapa-label">Horário</span>
+                        </div>
+                        <div class="etapa-linha"></div>
+                        <div class="etapa" data-etapa="4">
+                            <div class="etapa-numero">4</div>
+                            <span class="etapa-label">Dados</span>
+                        </div>
+                    </div>
+
+                    <!-- ETAPA 1: TIPO DE ATENDIMENTO -->
+                    <div class="etapa-conteudo etapa-ativa" id="etapa-1">
+                        <h2>Escolha o tipo de atendimento</h2>
+                        <p class="etapa-descricao">Selecione como prefere ter sua consulta</p>
+
+                        <div class="tipo-grid">
+                            <button class="tipo-card" data-tipo="online">
+                                <div class="tipo-icon">💻</div>
+                                <h3>Atendimento Online</h3>
+                                <p>Consulta por videochamada, no conforto da sua casa</p>
+                                <ul class="tipo-beneficios">
+                                    <li>✓ Sem necessidade de deslocamento</li>
+                                    <li>✓ Mesma eficácia do presencial</li>
+                                    <li>✓ Mais flexibilidade de horários</li>
+                                </ul>
+                            </button>
+
+                            <button class="tipo-card" data-tipo="presencial">
+                                <div class="tipo-icon">🏢</div>
+                                <h3>Atendimento Presencial</h3>
+                                <p>Consulta no consultório em Belo Horizonte</p>
+                                <ul class="tipo-beneficios">
+                                    <li>✓ Ambiente acolhedor e privado</li>
+                                    <li>✓ Contato presencial</li>
+                                    <li>✓ Fácil acesso e estacionamento</li>
+                                </ul>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ETAPA 2: SELECIONAR DATA -->
+                    <div class="etapa-conteudo" id="etapa-2">
+                        <h2>Selecione a data</h2>
+                        <p class="etapa-descricao">Escolha o dia da sua consulta</p>
+
+                        <div class="calendario-container">
+                            <div class="calendario-header">
+                                <button class="calendario-nav" id="mes-anterior" aria-label="Mês anterior">❮</button>
+                                <h3 class="calendario-titulo" id="calendario-mes-ano"></h3>
+                                <button class="calendario-nav" id="mes-proximo" aria-label="Próximo mês">❯</button>
+                            </div>
+                            <div class="calendario-dias-semana">
+                                <div>Dom</div>
+                                <div>Seg</div>
+                                <div>Ter</div>
+                                <div>Qua</div>
+                                <div>Qui</div>
+                                <div>Sex</div>
+                                <div>Sáb</div>
+                            </div>
+                            <div class="calendario-dias" id="calendario-dias"></div>
+                        </div>
+
+                        <div class="calendario-legenda">
+                            <div class="legenda-item">
+                                <span class="legenda-cor dia-disponivel"></span>
+                                <span>Disponível</span>
+                            </div>
+                            <div class="legenda-item">
+                                <span class="legenda-cor dia-selecionado"></span>
+                                <span>Selecionado</span>
+                            </div>
+                            <div class="legenda-item">
+                                <span class="legenda-cor dia-indisponivel"></span>
+                                <span>Indisponível</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ETAPA 3: SELECIONAR HORÁRIO -->
+                    <div class="etapa-conteudo" id="etapa-3">
+                        <h2>Selecione o horário</h2>
+                        <p class="etapa-descricao" id="data-selecionada-display"></p>
+
+                        <div class="horarios-container">
+                            <div class="horarios-periodo">
+                                <h3>🌅 Manhã</h3>
+                                <div class="horarios-grid" id="horarios-manha"></div>
+                            </div>
+                            <div class="horarios-periodo">
+                                <h3>☀️ Tarde</h3>
+                                <div class="horarios-grid" id="horarios-tarde"></div>
+                            </div>
+                        </div>
+
+                        <p class="horario-nota">💡 Cada sessão tem duração de 50 minutos</p>
+                    </div>
+
+                    <!-- ETAPA 4: CONFIRMAR DADOS -->
+                    <div class="etapa-conteudo" id="etapa-4">
+                        <h2>Confirme seus dados</h2>
+                        <p class="etapa-descricao">Preencha as informações abaixo para finalizar o agendamento</p>
+
+                        <div class="resumo-agendamento">
+                            <h3>📋 Resumo do agendamento</h3>
+                            <div class="resumo-item">
+                                <span class="resumo-label">Tipo:</span>
+                                <span class="resumo-valor" id="resumo-tipo"></span>
+                            </div>
+                            <div class="resumo-item">
+                                <span class="resumo-label">Data:</span>
+                                <span class="resumo-valor" id="resumo-data"></span>
+                            </div>
+                            <div class="resumo-item">
+                                <span class="resumo-label">Horário:</span>
+                                <span class="resumo-valor" id="resumo-horario"></span>
+                            </div>
+                        </div>
+
+                        <form class="form-dados" id="form-agendamento">
+                            <div class="form-group">
+                                <label for="nome">Nome completo *</label>
+                                <input type="text" id="nome" name="nome" required minlength="3">
+                                <span class="form-error" id="erro-nome"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">E-mail *</label>
+                                <input type="email" id="email" name="email" required>
+                                <span class="form-error" id="erro-email"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="telefone">Telefone (WhatsApp) *</label>
+                                <input type="tel" id="telefone" name="telefone" required placeholder="(31) 98765-4321">
+                                <span class="form-error" id="erro-telefone"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="mensagem">Mensagem (opcional)</label>
+                                <textarea id="mensagem" name="mensagem" rows="4" placeholder="Conte brevemente o que te traz para a terapia ou alguma informação importante"></textarea>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- NAVEGAÇÃO -->
+                    <div class="etapas-navegacao">
+                        <button class="btn btn-outline" id="btn-voltar" style="display: none;">❮ Voltar</button>
+                        <button class="btn btn-primary" id="btn-avancar">Avançar ❯</button>
+                        <button class="btn btn-primary btn-large" id="btn-confirmar" style="display: none;">Confirmar agendamento</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL DE SUCESSO -->
+    <div class="modal" id="modal-sucesso">
+        <div class="modal-conteudo">
+            <div class="modal-header">
+                <h2>✅ Agendamento realizado!</h2>
+            </div>
+            <div class="modal-body">
+                <p>Seu agendamento foi salvo com sucesso. Em breve, a Dra. Verônica entrará em contato via WhatsApp para confirmar.</p>
+
+                <div class="resumo-agendamento" style="margin: var(--spacing-lg) 0;">
+                    <div class="resumo-item">
+                        <span class="resumo-label">Tipo:</span>
+                        <span class="resumo-valor" id="modal-tipo"></span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Data:</span>
+                        <span class="resumo-valor" id="modal-data"></span>
+                    </div>
+                    <div class="resumo-item">
+                        <span class="resumo-label">Horário:</span>
+                        <span class="resumo-valor" id="modal-horario"></span>
+                    </div>
+                </div>
+
+                <p style="font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--spacing-lg);">
+                    💡 Você pode enviar uma mensagem diretamente pelo WhatsApp ou aguardar o contato da Dra. Verônica.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <a href="meus-agendamentos.html" class="btn btn-outline">Ver meus agendamentos</a>
+                <button class="btn btn-whatsapp" id="btn-whatsapp-modal">
+                    <span>📱</span> Enviar WhatsApp
+                </button>
+                <a href="index.html" class="btn btn-primary">Voltar ao início</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <div class="footer-about">
+                <div class="footer-logo">
+                    <span class="logo-icon">Ψ</span>
+                    <span>Dra Verônica Paz</span>
+                </div>
+                <p>Psicóloga CRP 04/26.871<br>Psicoterapia baseada em evidências - TCC</p>
+                <div class="footer-social">
+                    <a href="https://instagram.com/veronicapazpsicologa" target="_blank" rel="noopener" aria-label="Instagram">
+                        📷 Instagram
+                    </a>
+                    <a href="https://wa.me/5531988836237" target="_blank" rel="noopener" aria-label="WhatsApp">
+                        📱 WhatsApp
+                    </a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Navegação</h4>
+                    <ul>
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="sobre.html">Sobre</a></li>
+                        <li><a href="especialidades.html">Especialidades</a></li>
+                        <li><a href="certificados.html">Certificados</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Atendimento</h4>
+                    <ul>
+                        <li><a href="agendamento.html">Agendar consulta</a></li>
+                        <li><a href="meus-agendamentos.html">Meus agendamentos</a></li>
+                        <li><a href="depoimentos.html">Depoimentos</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contato</h4>
+                    <ul>
+                        <li>📱 (31) 98883-6237</li>
+                        <li>📷 @veronicapazpsicologa</li>
+                        <li>💻 Atendimento online</li>
+                        <li>🏢 Atendimento presencial</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Dra Verônica Reis S. Paz - CRP 04/26.871. Todos os direitos reservados.</p>
+            <p class="footer-dev">Desenvolvido com 💜 por <a href="https://github.com/Japapaz696" target="_blank" rel="noopener">Lucas Santana</a></p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="agendamento.js"></script>
+</body>
+</html>
