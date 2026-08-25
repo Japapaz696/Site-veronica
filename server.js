@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 const app = express();
 
 app.use(express.json());
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.use(express.static(path.join(__dirname)));
 
 // Data file path
