@@ -1,7 +1,7 @@
 {
   "name": "site-veronica",
   "version": "1.0.0",
-  "description": "Site da Dra. Verônica Reis S. Paz - sistema de agendamento",
+  "description": "Site de Verônica Reis Santana - sistema de agendamento",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -292,6 +292,4 @@ style.textContent = `
 document.head.appendChild(style);
 
 // ===== LOG DE INICIALIZAÇÃO =====
-console.log('🧠 Site da Dra. Verônica Paz carregado com sucesso!');
-console.log('📱 WhatsApp: (31) 98883-6237');
-console.log('📷 Instagram: @veronicapazpsicologa');
+console.log('Site de Verônica Reis Santana carregado com sucesso!');
