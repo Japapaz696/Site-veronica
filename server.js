@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs').promises;
@@ -16,7 +17,6 @@ async function readData() {
     const data = await fs.readFile(DATA_FILE, 'utf8');
     return JSON.parse(data);
   } catch (err) {
-    // File doesn't exist or is empty - create empty array
     if (err.code === 'ENOENT' || err.message.includes('No such file or directory')) {
       await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
       await fs.writeFile(DATA_FILE, '[]', 'utf8');
@@ -31,7 +31,7 @@ async function writeData(data) {
   await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// GET /api/ocupados - returns available slots (data + hora)
+// GET /api/ocupados — retorna slots ocupados (data + hora)
 app.get('/api/ocupados', async (req, res) => {
   const agendamentos = await readData();
   const slots = new Set();
@@ -41,7 +41,7 @@ app.get('/api/ocupados', async (req, res) => {
   res.json([...slots]);
 });
 
-// GET /api/agendamentos/por-ids?ids=1,2,3 — paciente vê só os próprios
+// GET /api/agendamentos/por-ids — paciente vê só os próprios
 app.get('/api/agendamentos/por-ids', async (req, res) => {
   const ids = String(req.query.ids || '')
     .split(',')
@@ -52,7 +52,16 @@ app.get('/api/agendamentos/por-ids', async (req, res) => {
   res.json(agendamentos.filter((ag) => ids.includes(ag.id)));
 });
 
-// POST /api/agendamentos - create new appointment
+// POST /api/login — autenticação no servidor
+app.post('/api/login', (req, res) => {
+  const { senha } = req.body || {};
+  if (senha === process.env.ADMIN_PASSWORD) {
+    return res.status(200).json({ ok: true });
+  }
+  return res.status(401).json({ error: 'Não autorizado' });
+});
+
+// POST /api/agendamentos — criar agendamento (público)
 app.post('/api/agendamentos', async (req, res) => {
   const { nome, tipo, data, hora, email, telefone, mensagem, confirmado } = req.body;
 
@@ -90,21 +99,19 @@ app.post('/api/agendamentos', async (req, res) => {
   res.status(201).json(newAppointment);
 });
 
-// GET /api/agendamentos - admin only
-app.get('/api/agendamentos', async (req, res) => {
+// GET /api/agendamentos — admin only
+app.get('/api/agendamentos', (req, res) => {
   const adminPassword = req.headers['x-admin-password'];
-  if (adminPassword !== 'veronica2026') {
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
-
-  const agendamentos = await readData();
-  res.json(agendamentos);
+  readData().then(agendamentos => res.json(agendamentos));
 });
 
-// PUT /api/agendamentos/:id - admin only
-app.put('/api/agendamentos/:id', async (req, res) => {
+// PUT /api/agendamentos/:id — admin only
+app.put('/api/agendamentos/:id', (req, res) => {
   const adminPassword = req.headers['x-admin-password'];
-  if (adminPassword !== 'veronica2026') {
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
@@ -115,50 +122,53 @@ app.put('/api/agendamentos/:id', async (req, res) => {
     return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
   }
 
-  const agendamentos = await readData();
-  const index = agendamentos.findIndex((ag) => ag.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: 'Agendamento não encontrado' });
-  }
+  readData().then(async (agendamentos) => {
+    const index = agendamentos.findIndex((ag) => ag.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Agendamento não encontrado' });
+    }
 
-  const conflito = agendamentos.find((ag) => ag.id !== id && ag.data === data && ag.hora === hora);
-  if (conflito) {
-    return res.status(409).json({ error: 'Horário já ocupado' });
-  }
+    const conflito = agendamentos.find((ag) => ag.id !== id && ag.data === data && ag.hora === hora);
+    if (conflito) {
+      return res.status(409).json({ error: 'Horário já ocupado' });
+    }
 
-  agendamentos[index] = {
-    ...agendamentos[index],
-    nome,
-    tipo,
-    data,
-    hora,
-    email: req.body.email !== undefined ? req.body.email : agendamentos[index].email,
-    telefone: req.body.telefone !== undefined ? req.body.telefone : agendamentos[index].telefone,
-    mensagem: mensagem || '',
-    confirmado: confirmado !== undefined ? confirmado : agendamentos[index].confirmado
-  };
+    agendamentos[index] = {
+      ...agendamentos[index],
+      nome,
+      tipo,
+      data,
+      hora,
+      email: req.body.email !== undefined ? req.body.email : agendamentos[index].email,
+      telefone: req.body.telefone !== undefined ? req.body.telefone : agendamentos[index].telefone,
+      mensagem: mensagem || '',
+      confirmado: confirmado !== undefined ? confirmado : agendamentos[index].confirmado
+    };
 
-  await writeData(agendamentos);
-  res.json(agendamentos[index]);
+    await writeData(agendamentos);
+    res.json(agendamentos[index]);
+  });
 });
 
-// DELETE /api/agendamentos/:id - admin only
-app.delete('/api/agendamentos/:id', async (req, res) => {
+// DELETE /api/agendamentos/:id — admin only
+app.delete('/api/agendamentos/:id', (req, res) => {
   const adminPassword = req.headers['x-admin-password'];
-  if (adminPassword !== 'veronica2026') {
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
   const id = parseInt(req.params.id);
-  const agendamentos = await readData();
-  const index = agendamentos.findIndex(ag => ag.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: 'Agendamento não encontrado' });
-  }
 
-  agendamentos.splice(index, 1);
-  await writeData(agendamentos);
-  res.status(204).send();
+  readData().then(async (agendamentos) => {
+    const index = agendamentos.findIndex(ag => ag.id === id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Agendamento não encontrado' });
+    }
+
+    agendamentos.splice(index, 1);
+    await writeData(agendamentos);
+    res.status(204).send();
+  });
 });
 
 // Start server

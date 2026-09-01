@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Área administrativa - Gerenciar agendamentos">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <title>Área Administrativa - Verônica Reis Santana</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -234,21 +235,29 @@
     <script src="script.js"></script>
     <script>
         // ===== AUTENTICAÇÃO =====
-        const SENHA_ADMIN = 'veronica2026'; // ⚠️ MUDAR ESSA SENHA!
 
-        document.getElementById('form-login').addEventListener('submit', (e) => {
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             const senha = document.getElementById('senha').value;
 
-            if (senha === SENHA_ADMIN) {
-                document.getElementById('login-container').style.display = 'none';
-                document.getElementById('admin-container').style.display = 'block';
-                sessionStorage.setItem('admin_logged', 'true');
-                sessionStorage.setItem('admin_password', senha); // usado nos headers da API
-                carregarDashboard();
-            } else {
-                document.getElementById('erro-senha').textContent = 'Senha incorreta';
-                mostrarToast('Senha incorreta', 'error');
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senha })
+                });
+                if (res.ok) {
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('admin-container').style.display = 'block';
+                    sessionStorage.setItem('admin_logged', 'true');
+                    carregarDashboard();
+                } else {
+                    document.getElementById('erro-senha').textContent = 'Senha incorreta';
+                    mostrarToast('Senha incorreta', 'error');
+                }
+            } catch (err) {
+                document.getElementById('erro-senha').textContent = 'Erro de conexão';
+                mostrarToast('Erro de conexão', 'error');
             }
         });
 
