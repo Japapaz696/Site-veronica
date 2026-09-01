@@ -66,7 +66,7 @@
 
                     <!-- Empty state -->
                     <div class="empty-state" id="empty-state" style="display: none;">
-                        <div class="especialidade-icon-large">📅</div>
+                        <div class="especialidade-icon-large">Data</div>
                         <h3>Nenhum agendamento encontrado</h3>
                         <p>Você ainda não tem agendamentos. Que tal agendar sua primeira consulta?</p>
                         <a href="agendamento.html" class="btn btn-primary" style="margin-top: var(--spacing-md);">Agendar consulta</a>
@@ -80,7 +80,7 @@
     <div class="modal" id="modal-cancelar">
         <div class="modal-conteudo">
             <div class="modal-header">
-                <h2>⚠️ Cancelar agendamento?</h2>
+                <h2>Cuidado Cancelar agendamento?</h2>
             </div>
             <div class="modal-body">
                 <p>Tem certeza que deseja cancelar este agendamento?</p>
@@ -95,7 +95,7 @@
                     </div>
                 </div>
                 <p style="font-size: var(--text-sm); color: var(--text-muted);">
-                    ⚠️ Esta ação não pode ser desfeita. Se desejar remarcar, será necessário fazer um novo agendamento.
+                    Cuidado Esta ação não pode ser desfeita. Se desejar remarcar, será necessário fazer um novo agendamento.
                 </p>
             </div>
             <div class="modal-footer">
@@ -142,15 +142,15 @@
                 <div class="footer-col">
                     <h4>Contato</h4>
                     <ul>
-                        <li>💻 Atendimento online</li>
-                        <li>🏢 Atendimento presencial</li>
+                        <li>Atendimento online</li>
+                        <li>Atendimento presencial</li>
                     </ul>
                 </div>
             </div>
         </div>
         <div class="footer-bottom">
             <p>&copy; 2026 Verônica Reis Santana. Todos os direitos reservados.</p>
-            <p class="footer-dev">Desenvolvido com 💜 por <a href="https://github.com/Japapaz696" target="_blank" rel="noopener">Lucas Santana</a></p>
+            <p class="footer-dev">Desenvolvido por por <a href="https://github.com/Japapaz696" target="_blank" rel="noopener">Lucas Santana</a></p>
         </div>
     </footer>
 
@@ -256,7 +256,7 @@
                     </div>
                     <div class="agendamento-info">
                         <div class="info-row">
-                            <span class="info-icon">📅</span>
+                            <span class="info-icon">Data</span>
                             <span>${formatarData(agendamento.data)}</span>
                         </div>
                         <div class="info-row">
@@ -298,7 +298,7 @@
 
             const mensagem = `Olá, Verônica Reis Santana! Sobre meu agendamento:
 
-📅 Data: ${formatarDataCurta(agendamento.data)}
+Data Data: ${formatarDataCurta(agendamento.data)}
 ⏰ Horário: ${agendamento.hora}
 💻 Tipo: ${agendamento.tipo === 'online' ? 'Online' : 'Presencial'}
 
