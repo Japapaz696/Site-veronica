@@ -615,7 +615,7 @@ img {
 .info-item {
     display: flex;
     gap: 1rem;
-    align-items: flex-start);
+    align-items: flex-start;
 }
 
 .info-item .info-icon {
