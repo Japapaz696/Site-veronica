@@ -406,7 +406,7 @@ function mostrarModalSucesso() {
     // Preparar botão WhatsApp
     const btnWhatsApp = document.getElementById('btn-whatsapp-modal');
     btnWhatsApp.onclick = () => {
-        const mensagem = `Olá, Verônica Reis Santana! Gostaria de confirmar meu agendamento:
+        const mensagem = `Olá, Veronica Reis Santana da Paz! Gostaria de confirmar meu agendamento:
 
 📅 Data: ${formatarDataCurta(agendamentoAtual.data)}
 ⏰ Horário: ${agendamentoAtual.hora}
