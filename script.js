@@ -292,4 +292,4 @@ style.textContent = `
 document.head.appendChild(style);
 
 // ===== LOG DE INICIALIZAÇÃO =====
-console.log('Site de Verônica Reis Santana carregado com sucesso!');
+console.log('Site de Veronica Reis Santana da Paz carregado com sucesso!');
