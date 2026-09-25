@@ -4,6 +4,10 @@ const path = require('path');
 const fs = require('fs').promises;
 const app = express();
 
+function hasValidAdminPassword(password) {
+  return Boolean(process.env.ADMIN_PASSWORD) && password === process.env.ADMIN_PASSWORD;
+}
+
 app.use(express.json());
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.use(express.static(path.join(__dirname)));
@@ -55,7 +59,7 @@ app.get('/api/agendamentos/por-ids', async (req, res) => {
 // POST /api/login — autenticação no servidor
 app.post('/api/login', (req, res) => {
   const { senha } = req.body || {};
-  if (senha === process.env.ADMIN_PASSWORD) {
+  if (hasValidAdminPassword(senha)) {
     return res.status(200).json({ ok: true });
   }
   return res.status(401).json({ error: 'Não autorizado' });
@@ -102,7 +106,7 @@ app.post('/api/agendamentos', async (req, res) => {
 // GET /api/agendamentos — admin only
 app.get('/api/agendamentos', (req, res) => {
   const adminPassword = req.headers['x-admin-password'];
-  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+  if (!hasValidAdminPassword(adminPassword)) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
   readData().then(agendamentos => res.json(agendamentos));
@@ -111,7 +115,7 @@ app.get('/api/agendamentos', (req, res) => {
 // PUT /api/agendamentos/:id — admin only
 app.put('/api/agendamentos/:id', (req, res) => {
   const adminPassword = req.headers['x-admin-password'];
-  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+  if (!hasValidAdminPassword(adminPassword)) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
@@ -153,7 +157,7 @@ app.put('/api/agendamentos/:id', (req, res) => {
 // DELETE /api/agendamentos/:id — admin only
 app.delete('/api/agendamentos/:id', (req, res) => {
   const adminPassword = req.headers['x-admin-password'];
-  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+  if (!hasValidAdminPassword(adminPassword)) {
     return res.status(401).json({ error: 'Não autorizado' });
   }
 
