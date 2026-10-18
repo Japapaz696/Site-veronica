@@ -23,12 +23,36 @@ HTML, CSS, JavaScript, Node.js, Express e dotenv.
 Somente a pasta `public/` é servida como conteúdo estático. Isso mantém fora do alcance da web o `server.js`, o `package.json`, o `render.yaml`, o `.env` e a pasta `data/`.
 
 ```
-public/   páginas, estilos, scripts e imagens
-lib/      funções internas (hash de senha)
-scripts/  utilitários de linha de comando
-tests/    testes de segurança e de repositório
-data/     arquivo de agendamentos — nunca servido; só agendamentos.example.json é versionado
-server.js API + servidor estático restrito a public/
+public/     páginas, estilos, scripts e imagens
+lib/        funções internas (hash de senha, persistência)
+scripts/    utilitários de linha de comando (hash de senha, migração para Postgres)
+tests/      testes de segurança, de repositório e do backend Postgres
+data/       arquivo de agendamentos — nunca servido; só agendamentos.example.json é versionado
+server.js   API + servidor estático restrito a public/
+```
+
+### Persistência
+
+Os agendamentos ficam no **Postgres** quando `DATABASE_URL` está definida. Sem
+banco, o sistema usa um arquivo JSON local — útil para desenvolvimento e testes.
+
+| Backend | Quando | Observação |
+| --- | --- | --- |
+| Postgres | `DATABASE_URL` definida | obrigatório em produção |
+| Arquivo JSON | sem `DATABASE_URL` | desenvolvimento e testes |
+
+A escolha foi por whitelist: sem configuração explícita, o comportamento é o
+local. O restante do servidor não sabe qual backend está ativo, porque a
+interface em `lib/repository.js` é a mesma nos dois casos.
+
+Por que o Postgres é obrigatório em produção: o plano gratuito do provedor não
+permite disco persistente e o sistema de arquivos é efêmero — arquivos gravados
+localmente se perdem a cada deploy, restart ou hibernação.
+
+Para migrar dados já existentes de um arquivo:
+
+```
+DATABASE_URL=postgres://... node scripts/migrar-para-postgres.js data/agendamentos.json
 ```
 
 Endpoints principais:

@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs').promises;
 const { hashPassword, verifyScryptPassword } = require('./lib/passwords');
+const { criarRepositorio } = require('./lib/repository');
 
 const DEFAULT_PUBLIC_DIR = path.join(__dirname, 'public');
 const DEFAULT_DATA_FILE = path.join(__dirname, 'data', 'agendamentos.json');
@@ -129,37 +130,23 @@ function createApp(options = {}) {
   );
   const loginAttempts = new Map();
   let writeQueue = Promise.resolve();
+  // A escolha do backend vive na fábrica: Postgres quando há pool, JSON caso contrário.
+  const repositorio = options.repositorio || criarRepositorio({
+    pool: options.pool,
+    dataFile,
+    fs,
+  });
 
   const app = express();
   app.disable('x-powered-by');
   if (isProduction) app.set('trust proxy', 1);
 
+  // A interface do repositório já é atômica no backend; this garante a ordem
+  // das operações dentro do processo.
   function withDataLock(task) {
     const result = writeQueue.then(task);
     writeQueue = result.then(() => undefined, () => undefined);
     return result;
-  }
-
-  async function readData() {
-    try {
-      const raw = await fs.readFile(dataFile, 'utf8');
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        await fs.mkdir(path.dirname(dataFile), { recursive: true, mode: 0o700 });
-        await fs.writeFile(dataFile, '[]', { encoding: 'utf8', mode: 0o600 });
-        return [];
-      }
-      throw error;
-    }
-  }
-
-  async function writeData(data) {
-    await fs.mkdir(path.dirname(dataFile), { recursive: true, mode: 0o700 });
-    const temporary = `${dataFile}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`;
-    await fs.writeFile(temporary, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
-    await fs.rename(temporary, dataFile);
   }
 
   function verifyAdminPassword(candidate) {
@@ -330,7 +317,7 @@ function createApp(options = {}) {
   // GET /api/ocupados — apenas datas/horários ocupados, sem dados pessoais.
   app.get('/api/ocupados', async (req, res, next) => {
     try {
-      const agendamentos = await readData();
+      const agendamentos = await repositorio.readAll();
       const slots = new Set(agendamentos.map((ag) => `${ag.data}T${ag.hora}`));
       res.json([...slots]);
     } catch (error) {
@@ -390,7 +377,7 @@ function createApp(options = {}) {
       }
 
       const result = await withDataLock(async () => {
-        const agendamentos = await readData();
+        const agendamentos = await repositorio.readAll();
         if (agendamentos.some((ag) => ag.data === data && ag.hora === hora)) {
           return { conflict: true };
         }
@@ -398,7 +385,7 @@ function createApp(options = {}) {
         do {
           // O id precisa continuar sendo um número seguro para o JavaScript do navegador.
           id = Number(`${Date.now()}${crypto.randomInt(1000, 10000)}`.slice(-15));
-        } while (agendamentos.some((ag) => ag.id === id));
+        } while (await repositorio.findById(id));
 
         const accessToken = crypto.randomBytes(32).toString('base64url');
         const newAppointment = {
@@ -414,9 +401,10 @@ function createApp(options = {}) {
           criadoEm: new Date().toISOString(),
           accessTokenHash: hashAccessToken(accessToken),
         };
-        agendamentos.push(newAppointment);
-        await writeData(agendamentos);
-        return { appointment: newAppointment, accessToken };      });
+        const saved = await repositorio.insert(newAppointment);
+        if (!saved) return { conflict: true };
+        return { appointment: saved, accessToken };
+      });
 
       if (result.conflict) {
         return res.status(409).json({ error: 'Horário já ocupado' });
@@ -437,7 +425,7 @@ function createApp(options = {}) {
       if (!Array.isArray(credentials) || credentials.length > MAX_CREDENTIALS_PER_LOOKUP) {
         return res.status(400).json({ error: 'Credenciais inválidas' });
       }
-      const agendamentos = await readData();
+      const agendamentos = await repositorio.readAll();
       const found = [];
       for (const credential of credentials) {
         if (!credential || typeof credential !== 'object') continue;
@@ -460,7 +448,7 @@ function createApp(options = {}) {
       return res.status(401).json({ error: 'Não autorizado' });
     }
     try {
-      const agendamentos = await readData();
+      const agendamentos = await repositorio.readAll();
       return res.json(agendamentos.map(adminAppointment));
     } catch (error) {
       return next(error);
@@ -502,15 +490,13 @@ function createApp(options = {}) {
 
     try {
       const updated = await withDataLock(async () => {
-        const agendamentos = await readData();
-        const index = agendamentos.findIndex((ag) => ag.id === id);
-        if (index === -1) return { notFound: true };
+        const agendamentos = await repositorio.readAll();
+        const current = agendamentos.find((ag) => ag.id === id);
+        if (!current) return { notFound: true };
         if (agendamentos.some((ag) => ag.id !== id && ag.data === data && ag.hora === hora)) {
           return { conflict: true };
         }
-        const current = agendamentos[index];
-        agendamentos[index] = {
-          ...current,
+        const alterado = await repositorio.update(id, {
           nome,
           tipo,
           data,
@@ -519,9 +505,8 @@ function createApp(options = {}) {
           telefone,
           mensagem,
           confirmado: body.confirmado !== undefined ? Boolean(body.confirmado) : current.confirmado,
-        };
-        await writeData(agendamentos);
-        return { appointment: agendamentos[index] };
+        });
+        return { appointment: alterado };
       });
 
       if (updated.notFound) return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -544,14 +529,12 @@ function createApp(options = {}) {
 
     try {
       const outcome = await withDataLock(async () => {
-        const agendamentos = await readData();
-        const index = agendamentos.findIndex((ag) => ag.id === id);
-        if (index === -1) return { notFound: true };
-        if (!admin && !tokenMatchesHash(token, agendamentos[index].accessTokenHash)) {
+        const alvo = await repositorio.findById(id);
+        if (!alvo) return { notFound: true };
+        if (!admin && !tokenMatchesHash(token, alvo.accessTokenHash)) {
           return { notFound: true };
         }
-        agendamentos.splice(index, 1);
-        await writeData(agendamentos);
+        await repositorio.remove(id);
         return { removed: true };
       });
       if (outcome.notFound) return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -595,14 +578,47 @@ function createApp(options = {}) {
   return app;
 }
 
-const app = createApp();
-
-if (require.main === module) {
-  const port = Number(process.env.PORT) || 3000;
-  app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
-    console.log('Arquivos públicos servidos de public/');
+// O pool só é criado no processo real do servidor, nunca em testes.
+function criarPoolSeConfigurado() {
+  const url = process.env.DATABASE_URL;
+  if (!url) return null;
+  const { Pool } = require('pg');
+  const usaSsl = process.env.DATABASE_SSL !== 'false';
+  return new Pool({
+    connectionString: url,
+    // O Render exige TLS, mas o certificado não é verificado na cadeia pública.
+    ssl: usaSsl ? { rejectUnauthorized: false } : false,
+    max: 5,
   });
 }
 
-module.exports = { createApp, app, hashPassword, verifyScryptPassword };
+let app = null;
+let pool = null;
+
+if (require.main === module) {
+  pool = criarPoolSeConfigurado();
+  app = createApp({ pool });
+  const port = Number(process.env.PORT) || 3000;
+  const iniciar = async () => {
+    if (pool) {
+      const { criarRepositorioPostgres } = require('./lib/repository');
+      await criarRepositorioPostgres({ pool }).garantirEsquema();
+      console.log('Persistência: Postgres');
+    } else {
+      console.log('Persistência: arquivo JSON (defina DATABASE_URL para usar Postgres)');
+    }
+    app.listen(port, () => {
+      console.log(`Servidor rodando na porta ${port}`);
+      console.log('Arquivos públicos servidos de public/');
+    });
+  };
+  iniciar().catch((erro) => {
+    console.error('Falha ao iniciar:', erro.message);
+    process.exit(1);
+  });
+} else {
+  // Importado por testes: sem banco, sem conexão.
+  app = createApp();
+}
+
+module.exports = { createApp, app, criarPoolSeConfigurado, hashPassword, verifyScryptPassword };
