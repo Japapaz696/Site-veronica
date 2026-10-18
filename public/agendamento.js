@@ -43,15 +43,13 @@ function formatarDataCurta(dataStr) {
     });
 }
 
-// Helper functions for API calls (with localStorage fallback for development)
+// Helper functions for API calls
 async function obterHorariosOcupados() {
     try {
-        const occupiedSlots = await apiGet('/api/ocupados');
-        return occupiedSlots;
+        return await apiGet('/api/ocupados');
     } catch (error) {
-        console.warn('API não disponível, usando localStorage:', error);
-        const agendamentos = localStorage.getItem('agendamentos');
-        return agendamentos ? JSON.parse(agendamentos).map(ag => ag.data + 'T' + ag.hora) : [];
+        console.warn('Não foi possível consultar horários ocupados:', error);
+        return [];
     }
 }
 
@@ -370,16 +368,19 @@ document.getElementById('btn-confirmar').addEventListener('click', async () => {
     // Salvar agendamento via API
     try {
         const novoAgendamento = {
-            ...agendamentoAtual,
-            id: Date.now(),
-            criadoEm: new Date().toISOString()
+            nome: agendamentoAtual.nome,
+            tipo: agendamentoAtual.tipo,
+            data: agendamentoAtual.data,
+            hora: agendamentoAtual.hora,
+            email: agendamentoAtual.email || '',
+            telefone: agendamentoAtual.telefone || '',
+            mensagem: agendamentoAtual.mensagem || ''
         };
 
+        // O servidor define id, status e devolve um token de acesso do paciente.
         const criado = await apiPost('/api/agendamentos', novoAgendamento);
 
-        const meusIds = JSON.parse(localStorage.getItem('meus_agendamento_ids') || '[]');
-        meusIds.push(criado.id);
-        localStorage.setItem('meus_agendamento_ids', JSON.stringify(meusIds));
+        salvarCredencial(criado.id, criado.accessToken);
 
         mostrarModalSucesso();
     } catch (error) {

@@ -1,0 +1,4 @@
+# Exemplo de estrutura do arquivo de dados.
+# Copie para data/agendamentos.json apenas em ambiente local.
+# O arquivo real nunca é versionado (veja .gitignore).
+[]

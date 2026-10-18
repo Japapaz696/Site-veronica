@@ -120,19 +120,13 @@ window.addEventListener('scroll', () => {
 // ===== FUNÇÕES UTILITÁRIAS =====
 
 // API Helper functions - for use across client and admin pages
-// When running from a server (http://localhost:3000) these call the backend API
-// When running from file:// or same origin, they fall back to localStorage
+// A autenticação administrativa usa cookie de sessão HttpOnly: o JavaScript
+// nunca lê nem guarda a senha. A exclusão pelo paciente usa um token opaco.
 
 const API_BASE = ''; // same origin
 
-async function apiGet(path, withAuth = false) {
-    const headers = {};
-    const adminPassword = sessionStorage.getItem('admin_password');
-    if (withAuth && adminPassword) {
-        headers['x-admin-password'] = adminPassword;
-    }
-
-    const response = await fetch(API_BASE + path, { headers });
+async function apiGet(path) {
+    const response = await fetch(API_BASE + path, { credentials: 'same-origin' });
     if (!response.ok) {
         throw new Error('API error: ' + response.status);
     }
@@ -142,6 +136,7 @@ async function apiGet(path, withAuth = false) {
 async function apiPost(path, data) {
     const response = await fetch(API_BASE + path, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
@@ -153,15 +148,10 @@ async function apiPost(path, data) {
 }
 
 async function apiPut(path, data) {
-    const headers = {};
-    const adminPassword = sessionStorage.getItem('admin_password');
-    if (adminPassword) {
-        headers['x-admin-password'] = adminPassword;
-    }
-
     const response = await fetch(API_BASE + path, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...headers },
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
     if (!response.ok) {
@@ -171,25 +161,58 @@ async function apiPut(path, data) {
     return response.json();
 }
 
-async function apiDelete(path) {
+async function apiDelete(path, token) {
     const headers = {};
-    const adminPassword = sessionStorage.getItem('admin_password');
-    if (adminPassword) {
-        headers['x-admin-password'] = adminPassword;
+    if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
     }
 
-    const response = await fetch(API_BASE + path, { method: 'DELETE', headers });
+    const response = await fetch(API_BASE + path, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers
+    });
     if (!response.ok) {
         const err = await response.json().catch(() => ({ error: response.statusText }));
         throw new Error(err.error || 'API error');
     }
 }
 
-// Legacy: get appointments (with localStorage fallback)
-function obterAgendamentosExistentes() {
-    const agendamentos = localStorage.getItem('agendamentos');
-    return agendamentos ? JSON.parse(agendamentos) : [];
+// ===== CREDENCIAIS DO PACIENTE =====
+// Guardamos apenas { id, token } no navegador do próprio paciente.
+// Nome, e-mail, telefone e mensagem nunca ficam salvos localmente.
+
+const MINHAS_CREDENCIAIS_KEY = 'meus_agendamentos_credenciais';
+
+function obterCredenciaisSalvas() {
+    try {
+        const bruto = localStorage.getItem(MINHAS_CREDENCIAIS_KEY);
+        const lista = bruto ? JSON.parse(bruto) : [];
+        if (!Array.isArray(lista)) return [];
+        return lista.filter((item) => item && item.id && item.token);
+    } catch (e) {
+        return [];
+    }
 }
+
+function salvarCredencial(id, token) {
+    if (!id || !token) return;
+    const lista = obterCredenciaisSalvas().filter((item) => item.id !== id);
+    lista.push({ id, token });
+    localStorage.setItem(MINHAS_CREDENCIAIS_KEY, JSON.stringify(lista));
+}
+
+function removerCredencial(id) {
+    const lista = obterCredenciaisSalvas().filter((item) => item.id !== id);
+    localStorage.setItem(MINHAS_CREDENCIAIS_KEY, JSON.stringify(lista));
+}
+
+// Remove resíduos de versões anteriores, que guardavam dados pessoais completos.
+function limparArmazenamentoLegado() {
+    localStorage.removeItem('meus_agendamento_ids');
+    localStorage.removeItem('agendamentos');
+}
+limparArmazenamentoLegado();
 
 // Formatação de data BR
 function formatarData(dataStr) {
