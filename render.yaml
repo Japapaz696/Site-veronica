@@ -11,5 +11,16 @@ services:
       # Definir no painel do Render, nunca no repositório:
       # - key: ADMIN_PASSWORD_HASH   (ou ADMIN_PASSWORD)
       # - key: SESSION_SECRET        (obrigatório, mínimo 32 caracteres)
+      # - key: DATABASE_URL          (Internal Database URL do Postgres; sem ela
+      #                               os agendamentos ficam em arquivo e se
+      #                               perdem a cada deploy, pois o disco é efêmero)
     regions:
       - oregon
+
+databases:
+  - name: veronica-db
+    plan: free
+    databaseName: veronica
+    # O Postgres gratuito do Render expira 30 dias após a criação.
+    # O Render avisa por e-mail e dá 14 dias de tolerância antes de apagar tudo.
+    # Para uso contínuo, migre para o plano pago (a partir de US$ 6/mês).
