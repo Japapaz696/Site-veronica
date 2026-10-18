@@ -8,9 +8,9 @@ O site apresenta informações sobre atendimento, especialidades, certificados, 
 
 ## Funcionalidades
 
-- páginas institucionais, blog e certificados;
+- páginas institucionais, blog e certificados em `public/`;
 - formulário e consulta de agendamentos;
-- área administrativa do projeto;
+- área administrativa com sessão em cookie HttpOnly;
 - API Express para as rotas utilizadas pela interface;
 - layout responsivo e recursos básicos de acessibilidade.
 
@@ -20,12 +20,45 @@ HTML, CSS, JavaScript, Node.js, Express e dotenv.
 
 ## Arquitetura
 
-As páginas estáticas ficam na raiz do projeto. O `server.js` serve os arquivos e expõe as rotas da API em `/api`. Os dados de demonstração ficam em `data/`.
+Somente a pasta `public/` é servida como conteúdo estático. Isso mantém fora do alcance da web o `server.js`, o `package.json`, o `render.yaml`, o `.env` e a pasta `data/`.
+
+```
+public/   páginas, estilos, scripts e imagens
+lib/      funções internas (hash de senha)
+scripts/  utilitários de linha de comando
+tests/    testes de segurança e de repositório
+data/     arquivo de agendamentos — nunca servido; só agendamentos.example.json é versionado
+server.js API + servidor estático restrito a public/
+```
+
+Endpoints principais:
+
+| Método | Rota | Acesso |
+| --- | --- | --- |
+| GET | `/api/ocupados` | público (apenas data e hora ocupadas) |
+| POST | `/api/agendamentos` | público (o servidor define id, status e token) |
+| POST | `/api/agendamentos/meus` | público (exige token de cada agendamento) |
+| DELETE | `/api/agendamentos/:id` | dono do agendamento (token) ou administrador |
+| POST | `/api/login` / `/api/logout` | administrativo |
+| GET | `/api/session` | informa se há sessão ativa |
+| GET/PUT/DELETE | `/api/agendamentos` | administrativo |
+
+## Modelo de segurança
+
+- **Sessão administrativa**: depois do login, o servidor envia um cookie assinado com HMAC-SHA256, `HttpOnly`, `SameSite=Strict` e `Secure` em produção. A senha nunca é gravada no navegador.
+- **Senha no servidor**: comparada com `scrypt` (ou com comparação de tempo constante quando em texto puro). O header `x-admin-password` não é mais aceito.
+- **Token do paciente**: cada agendamento recebe um token aleatório de 32 bytes. O servidor guarda apenas o hash SHA-256. O token é o que prova a propriedade do registro — não é mais possível consultar agendamentos alheios informando um id.
+- **Limitação de tentativas** de login por IP (5 em 15 minutos).
+- **Validação e limites**: campos normalizados e truncados, data e hora em formato estrito, e-mail e telefone verificados, corpo limitado a 32 KB.
+- **Cabeçalhos**: `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e, em produção, `Strict-Transport-Security`.
+- **Escrita da API** exige mesma origem e `Content-Type: application/json`, o que fecha o vetor de CSRF simples.
+- **Gravação atômica** do arquivo de dados (escrita em arquivo temporário e renomeação), com fila interna contra condição de corrida.
 
 ## Como executar
 
 ```bash
 npm install
+npm test
 npm start
 ```
 
@@ -33,17 +66,42 @@ Abra `http://localhost:3000` (ou a porta definida por `PORT`).
 
 ## Variáveis de ambiente
 
-Crie um arquivo `.env` apenas quando necessário para o ambiente local. Ele não deve ser versionado. A aplicação aceita `PORT`; nunca publique senhas ou credenciais reais no repositório.
+Veja `.env.example`. Nunca versione valores reais.
 
-## Deploy
+| Variável | Uso |
+| --- | --- |
+| `PORT` | porta do servidor |
+| `ADMIN_PASSWORD` | senha administrativa em texto puro (alternativa simples) |
+| `ADMIN_PASSWORD_HASH` | hash scrypt da senha (preferível) |
+| `SESSION_SECRET` | obrigatório em produção, mínimo de 32 caracteres |
+| `ALLOWED_ORIGIN` | origens extra autorizadas, separadas por vírgula |
+| `DATA_FILE` | caminho do arquivo de dados |
+
+Para gerar o hash da senha sem deixá-la no histórico do terminal:
+
+```bash
+node scripts/gerar-hash-senha.js
+```
+
+## Implantação
 
 O deploy configurado é: [site-veronica.onrender.com](https://site-veronica.onrender.com).
 
-## Melhorias futuras
+No painel do provedor, defina `ADMIN_PASSWORD_HASH` (ou `ADMIN_PASSWORD`) e `SESSION_SECRET`. Troque a senha que já esteve publicada, porque o arquivo de dados e o código ficaram acessíveis na internet por um período.
 
-- persistência em banco de dados;
-- autenticação administrativa mais robusta;
-- notificações e integrações externas mediante configuração segura.
+## Testes
+
+```bash
+npm test
+```
+
+A suíte cobre exposição de arquivos internos, autenticação, autorização por token, tentativa de enumeração de ids, validação de entrada, CSRF, cabeçalhos de segurança e formatação dos dados gravados.
+
+## Limitações conhecidas
+
+- o `data/` fica fora da web e é ignorado pelo git; o arquivo real nunca é versionado e precisa de backup próprio — veja `docs/SEGURANCA-DADOS.md`;
+- os dados continuam em arquivo JSON, não em banco de dados;
+- o histórico do git ainda contém versões antigas do arquivo de dados; a limpeza exige reescrita de histórico e está detalhada em `docs/SEGURANCA-DADOS.md`.
 
 ## Autor
 

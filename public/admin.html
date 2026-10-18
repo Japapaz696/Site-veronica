@@ -243,14 +243,18 @@
             try {
                 const res = await fetch('/api/login', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ senha })
                 });
+                document.getElementById('senha').value = '';
                 if (res.ok) {
                     document.getElementById('login-container').style.display = 'none';
                     document.getElementById('admin-container').style.display = 'block';
-                    sessionStorage.setItem('admin_logged', 'true');
                     carregarDashboard();
+                } else if (res.status === 429) {
+                    document.getElementById('erro-senha').textContent = 'Muitas tentativas. Aguarde alguns minutos.';
+                    mostrarToast('Muitas tentativas. Aguarde alguns minutos.', 'error');
                 } else {
                     document.getElementById('erro-senha').textContent = 'Senha incorreta';
                     mostrarToast('Senha incorreta', 'error');
@@ -261,18 +265,34 @@
             }
         });
 
-        // Verificar se já está logado
-        if (sessionStorage.getItem('admin_logged') === 'true') {
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('admin-container').style.display = 'block';
-            carregarDashboard();
+        // A sessão vive no cookie HttpOnly: o navegador apenas pergunta ao servidor.
+        async function verificarSessao() {
+            try {
+                const res = await fetch('/api/session', { credentials: 'same-origin' });
+                if (!res.ok) return false;
+                const dados = await res.json();
+                return dados.authenticated === true;
+            } catch (err) {
+                return false;
+            }
         }
 
+        (async () => {
+            if (await verificarSessao()) {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('admin-container').style.display = 'block';
+                carregarDashboard();
+            }
+        })();
+
         // Sair
-        document.getElementById('btn-sair').addEventListener('click', () => {
+        document.getElementById('btn-sair').addEventListener('click', async () => {
             if (confirm('Deseja sair da área administrativa?')) {
-                sessionStorage.removeItem('admin_logged');
-                sessionStorage.removeItem('admin_password');
+                try {
+                    await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
+                } catch (err) {
+                    // mesmo com falha de rede, a tela de login é restaurada
+                }
                 location.reload();
             }
         });
@@ -282,16 +302,18 @@
         let buscaAtual = '';
         let agendamentosCache = []; // lista vinda da API
 
-        // Busca a lista completa na API (requer senha salva no sessionStorage)
+        // Busca a lista completa na API (requer sessão administrativa ativa)
         async function carregarAgendamentosDaAPI() {
             try {
-                const dados = await apiGet('/api/agendamentos', true);
+                const dados = await apiGet('/api/agendamentos');
                 agendamentosCache = Array.isArray(dados) ? dados : [];
             } catch (e) {
                 console.warn('API admin indisponível:', e);
                 const msg = (e && e.message) || '';
                 if (msg.includes('401') || msg.includes('403')) {
                     mostrarToast('Sessão expirada. Faça login novamente.', 'error');
+                    document.getElementById('admin-container').style.display = 'none';
+                    document.getElementById('login-container').style.display = 'block';
                 } else {
                     mostrarToast('Não foi possível carregar os agendamentos. O servidor está rodando?', 'error');
                 }

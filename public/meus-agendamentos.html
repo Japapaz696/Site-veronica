@@ -165,23 +165,16 @@
         let agendamentoParaCancelar = null;
 
         async function obterMeusAgendamentos() {
-            const ids = JSON.parse(localStorage.getItem('meus_agendamento_ids') || '[]');
-            if (!ids.length) return [];
+            const credenciais = obterCredenciaisSalvas();
+            if (!credenciais.length) return [];
             try {
-                // Usa endpoint público que aceita lista de IDs
-                const url = '/api/agendamentos/por-ids?ids=' + ids.join(',');
-                const dados = await apiGet(url);
+                // O servidor só devolve registros cujo token confere.
+                const dados = await apiPost('/api/agendamentos/meus', { credentials: credenciais });
                 return Array.isArray(dados) ? dados : [];
             } catch (e) {
                 console.warn('Erro ao buscar meus agendamentos:', e);
                 return [];
             }
-        }
-
-        function obterAgendamentos() {
-            // Legacy fallback — não usado mais, mas mantido por compatibilidade
-            const agendamentos = localStorage.getItem('agendamentos');
-            return agendamentos ? JSON.parse(agendamentos) : [];
         }
 
         function formatarData(dataStr) {
@@ -329,14 +322,20 @@ Data Data: ${formatarDataCurta(agendamento.data)}
         async function cancelarAgendamento() {
             if (!agendamentoParaCancelar) return;
 
-            try {
-                // Cancela na API — o horário volta a ficar livre para outras pessoas
-                await apiDelete(`/api/agendamentos/${agendamentoParaCancelar}`);
+            const credencial = obterCredenciaisSalvas()
+                .find((item) => item.id === agendamentoParaCancelar);
 
-                // Remove o ID da lista local
-                const meusIds = JSON.parse(localStorage.getItem('meus_agendamento_ids') || '[]')
-                    .filter((id) => id !== agendamentoParaCancelar);
-                localStorage.setItem('meus_agendamento_ids', JSON.stringify(meusIds));
+            if (!credencial) {
+                mostrarToast('Cancelamento não autorizado neste navegador.', 'error');
+                return;
+            }
+
+            try {
+                // O token prova que o pedido de cancelamento é do próprio paciente
+                await apiDelete(`/api/agendamentos/${agendamentoParaCancelar}`, credencial.token);
+
+                // Remove a credencial local do agendamento excluído
+                removerCredencial(agendamentoParaCancelar);
 
                 document.getElementById('modal-cancelar').style.display = 'none';
                 agendamentoParaCancelar = null;

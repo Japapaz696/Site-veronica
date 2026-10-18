@@ -8,5 +8,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Definir no painel do Render, nunca no repositório:
+      # - key: ADMIN_PASSWORD_HASH   (ou ADMIN_PASSWORD)
+      # - key: SESSION_SECRET        (obrigatório, mínimo 32 caracteres)
     regions:
       - oregon
