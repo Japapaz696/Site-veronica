@@ -589,13 +589,33 @@ function criarPoolSeConfigurado() {
     return null;
   }
   const { Pool } = require('pg');
-  const usaSsl = process.env.DATABASE_SSL !== 'false';
-  return new Pool({
+
+  // O proprio sslmode da connection string manda, quando presente:
+  //   require    -> TLS sem verificar a cadeia (padrão do Neon e do Render)
+  //   verify-full-> TLS com cadeia verificada
+  //   disable    -> sem TLS (apenas Postgres local)
+  let ssl;
+  if (process.env.DATABASE_SSL === 'false') {
+    ssl = false;
+  } else if (/[?&]sslmode=/.test(url)) {
+    ssl = undefined; // deixa o driver interpretar
+  } else {
+    ssl = { rejectUnauthorized: false };
+  }
+
+  const pool = new Pool({
     connectionString: url,
-    // O Render exige TLS, mas o certificado não é verificado na cadeia pública.
-    ssl: usaSsl ? { rejectUnauthorized: false } : false,
+    ...(ssl === undefined ? {} : { ssl }),
     max: 5,
+    // Sem isto, uma conexao ociosa mantida pelo pool impede o scale-to-zero
+    // do Neon e o servico fica sempre ligado.
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
   });
+  pool.on('error', (erro) => {
+    console.error('Erro de conexao com o banco:', erro.message);
+  });
+  return pool;
 }
 
 let app = null;
