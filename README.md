@@ -119,12 +119,27 @@ No painel do provedor, defina `ADMIN_PASSWORD_HASH` (ou `ADMIN_PASSWORD`) e `SES
 npm test
 ```
 
-A suíte cobre exposição de arquivos internos, autenticação, autorização por token, tentativa de enumeração de ids, validação de entrada, CSRF, cabeçalhos de segurança e formatação dos dados gravados.
+**72 testes** sem banco e **11** contra PostgreSQL real.
+
+| Suíte | Testes | O que cobre |
+|---|---|---|
+| `tests/security.test.js` | 47 | exposição de arquivos internos, autenticação, autorização por token, enumeração de ids, validação de entrada, CSRF, cabeçalhos de segurança, privacidade dos dados gravados |
+| `tests/repository.test.js` | 14 | conteúdo do repositório: `.gitignore`, `.env` fora do versionamento, `render.yaml` sem segredos, páginas que usam a API carregando `api.js` na ordem certa |
+| `tests/api.test.js` | 11 | cliente da API do navegador: mensagem do servidor preservada, token do paciente no cabeçalho, `204` sem corpo, falha de rede distinguida de erro do servidor |
+
+Com banco (`TEST_DATABASE_URL` apontando para um PostgreSQL):
+
+```bash
+node --test tests/postgres.test.js
+```
+
+O **CI** roda formatação, lint, a suíte sem banco, a suíte com PostgreSQL 16 e
+confere que o `.env` não está versionado.
 
 ## Limitações conhecidas
 
 - o `data/` fica fora da web e é ignorado pelo git; o arquivo real nunca é versionado e precisa de backup próprio — veja `docs/SEGURANCA-DADOS.md`;
-- os dados continuam em arquivo JSON, não em banco de dados;
+- em produção os dados ficam no PostgreSQL; sem `DATABASE_URL` o servidor **não inicia**, para não gravar em arquivo efêmero por engano;
 - o histórico do git ainda contém versões antigas do arquivo de dados; a limpeza exige reescrita de histórico e está detalhada em `docs/SEGURANCA-DADOS.md`.
 
 ## Autor

@@ -11,6 +11,36 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
 
 describe('conteúdo do repositório', () => {
+  test('as páginas que usam a API carregam o script da API antes dos outros', () => {
+    // As funções de API vivem em public/api.js. Estas três páginas alcançam
+    // a API: duas por script inline, uma pelo agendamento.js. Se api.js for
+    // carregado depois (ou não for carregado), a chamada quebra em execução.
+    const paginas = ['public/agendamento.html', 'public/admin.html', 'public/meus-agendamentos.html'];
+    for (const pagina of paginas) {
+      const conteudo = read(pagina);
+
+      const posApi = conteudo.indexOf('src="api.js"');
+      assert.ok(posApi !== -1, `${pagina} não carrega api.js`);
+
+      for (const outro of ['src="script.js"', 'src="agendamento.js"']) {
+        const pos = conteudo.indexOf(outro);
+        if (pos !== -1) {
+          assert.ok(posApi < pos, `${pagina} carrega api.js depois de ${outro}`);
+        }
+      }
+    }
+  });
+
+  test('o agendamento.js usa as funções de API que o api.js define', () => {
+    // Guarda o par: o script usa apiGet/apiPost e o api.js define.
+    const definicoes = read('public/api.js');
+    for (const nome of ['apiGet', 'apiPost', 'apiPut', 'apiDelete']) {
+      assert.ok(definicoes.includes(`function ${nome}`), `api.js não define ${nome}`);
+    }
+    const uso = read('public/agendamento.js');
+    assert.ok(/\bapi(Get|Post)\s*\(/.test(uso), 'agendamento.js não usa a API');
+  });
+
   test('nenhum arquivo público guarda a senha administrativa', () => {
     const arquivos = ['public/script.js', 'public/admin.html', 'public/agendamento.js', 'public/meus-agendamentos.html'];
     for (const arquivo of arquivos) {
