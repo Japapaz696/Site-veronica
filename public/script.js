@@ -123,60 +123,8 @@ window.addEventListener('scroll', () => {
 // A autenticação administrativa usa cookie de sessão HttpOnly: o JavaScript
 // nunca lê nem guarda a senha. A exclusão pelo paciente usa um token opaco.
 
-const API_BASE = ''; // same origin
-
-async function apiGet(path) {
-    const response = await fetch(API_BASE + path, { credentials: 'same-origin' });
-    if (!response.ok) {
-        throw new Error('API error: ' + response.status);
-    }
-    return response.json();
-}
-
-async function apiPost(path, data) {
-    const response = await fetch(API_BASE + path, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(err.error || 'API error');
-    }
-    return response.json();
-}
-
-async function apiPut(path, data) {
-    const response = await fetch(API_BASE + path, {
-        method: 'PUT',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(err.error || 'API error');
-    }
-    return response.json();
-}
-
-async function apiDelete(path, token) {
-    const headers = {};
-    if (token) {
-        headers['Authorization'] = 'Bearer ' + token;
-    }
-
-    const response = await fetch(API_BASE + path, {
-        method: 'DELETE',
-        credentials: 'same-origin',
-        headers
-    });
-    if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: response.statusText }));
-        throw new Error(err.error || 'API error');
-    }
-}
+// As funcoes de API ficam em `api.js`, carregado antes deste arquivo nas
+// paginas que falam com o backend. Ver `public/api.js`.
 
 // ===== CREDENCIAIS DO PACIENTE =====
 // Guardamos apenas { id, token } no navegador do próprio paciente.

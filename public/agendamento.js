@@ -387,8 +387,14 @@ document.getElementById('btn-confirmar').addEventListener('click', async () => {
         const msg = (error && error.message) || '';
         if (msg.toLowerCase().includes('ocupado')) {
             mostrarToast('Horário já ocupado! Por favor, escolha outro horário.', 'error');
+        } else if (error && error.status === 0) {
+            // Sem resposta do servidor: a mensagem vai para o paciente em
+            // linguagem de usuário, não de desenvolvedor.
+            mostrarToast('Não foi possível conectar ao servidor. Verifique sua internet e tente de novo.', 'error');
+        } else if (error && error.status === 400) {
+            mostrarToast('Confira os dados preenchidos e tente de novo.', 'error');
         } else {
-            mostrarToast('Erro ao salvar agendamento. O servidor está rodando?', 'error');
+            mostrarToast('Não foi possível concluir seu agendamento. Tente novamente em instantes.', 'error');
         }
         console.error('Erro ao salvar agendamento:', error);
     }
