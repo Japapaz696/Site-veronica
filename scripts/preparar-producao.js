@@ -2,10 +2,12 @@
 /**
  * Prepara o banco de producao do Site-veronica e valida a migracao.
  *
- * Uso (na sua maquina, com a connection string do Neon na variavel de ambiente):
+ * Uso (na sua maquina):
  *
- *   $env:DATABASE_URL = "postgresql://USER:SENHA@ep-xxx.region.aws.neon.tech/neondb?sslmode=require"
- *   node scripts/preparar-producao.mjs
+ *   node scripts/preparar-producao.js
+ *
+ * A configuracao vem do `.env` local (ignorado pelo git) ou da variavel de
+ * ambiente DATABASE_URL. O valor nunca e impresso em log, erro ou saida.
  *
  * O que faz, em ordem:
  *   1. testa a conexao;
@@ -18,6 +20,8 @@
  * Nao imprime conteudo de agendamento, nome, e-mail, telefone nem token.
  * So contagens, hashes e confirmacoes.
  */
+
+require('../lib/env').carregarEnv();
 
 const crypto = require('crypto');
 const fs = require('fs');

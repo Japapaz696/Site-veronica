@@ -4,13 +4,18 @@
  * Popula o banco com agendamentos ficticios, para desenvolvimento e teste.
  *
  * Uso:
- *   DATABASE_URL=postgres://... node scripts/seed-ficticio.js
+ *   node scripts/seed-ficticio.js
+ *
+ * A configuracao vem do `.env` local (ignorado pelo git) ou da variavel de
+ * ambiente DATABASE_URL. O valor nunca e impresso.
  *
  * Nao aceita nenhum dado real: todos os nomes, e-mails, telefones e mensagens
  * sao inventados e claramente marcados como ficcao. O script recusa rodar se
  * a variavel ALLOW_SEED_FICTITIO nao estiver definida como "sim", para que
  * ninguem confunda o seed com uma migracao de verdade.
  */
+
+require('../lib/env').carregarEnv();
 
 const crypto = require('crypto');
 const { Pool } = require('pg');

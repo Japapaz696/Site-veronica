@@ -7,13 +7,18 @@
  * portavel, para guarda fora da plataforma.
  *
  * Uso:
- *   DATABASE_URL=postgres://... node scripts/backup-postgres.js caminho/do/backup.json
+ *   node scripts/backup-postgres.js caminho/do/backup.json
+ *
+ * A configuracao vem do `.env` local (ignorado pelo git) ou da variavel de
+ * ambiente DATABASE_URL. O valor nunca e impresso.
  *
  * O arquivo gerado contem dados pessoais: guarde-o fora de qualquer repositorio
  * git e fora de pasta sincronizada.
  *
  * O script nunca imprime o conteudo. Mostra apenas contagens e hashes.
  */
+
+require('../lib/env').carregarEnv();
 
 const fs = require('fs');
 const path = require('path');

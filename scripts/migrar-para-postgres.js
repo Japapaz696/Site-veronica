@@ -4,13 +4,18 @@
  * Migra os agendamentos de um arquivo JSON para o Postgres.
  *
  * Uso:
- *   DATABASE_URL=postgres://... node scripts/migrar-para-postgres.js data/agendamentos.json
+ *   node scripts/migrar-para-postgres.js data/agendamentos.json
+ *
+ * A configuracao vem do `.env` local (ignorado pelo git) ou da variavel de
+ * ambiente DATABASE_URL. O valor nunca e impresso.
  *
  * Regras:
  * - não apaga o arquivo de origem;
  * - não sobrescreve registros que já existam no banco (mesmo id);
  * - mostra apenas a contagem, nunca dados pessoais.
  */
+
+require('../lib/env').carregarEnv();
 
 const fs = require('fs');
 const { Pool } = require('pg');
