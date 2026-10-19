@@ -5,6 +5,16 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+Desktop.ini
 coverage/
+.idea/
+.vscode/
+
+# Dados de paciente: nunca versionar (apenas o exemplo fica rastreado).
 data/*.json
 !data/agendamentos.example.json
+
+# Logs de npm
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
