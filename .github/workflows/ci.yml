@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Seguranca e testes (com e sem banco)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: veronica
+          POSTGRES_PASSWORD: veronica
+          POSTGRES_DB: veronica
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U veronica -d veronica"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_VERSION: 20
+      # Banco efemero do runner. A suite de Postgres usa o schema proprio
+      # "teste_repositorio" e cria as tabelas por conta propria.
+      TEST_DATABASE_URL: postgresql://veronica:veronica@localhost:5432/veronica
+
+    steps:
+      - name: Fazer checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Conferir que o .env nao esta versionado
+        run: |
+          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo "ERRO: o arquivo .env nao pode estar versionado."
+            exit 1
+          fi
+          echo "ok: .env nao versionado"
+
+      # Testes de seguranca e de repositorio: nao precisam de banco.
+      - name: Rodar os testes sem banco
+        run: npm test
+
+      # Testes do backend Postgres, contra o servico postgres:16 do runner.
+      - name: Rodar os testes com Postgres
+        run: node --test tests/postgres.test.js
+
+      - name: Conferir as dependencias de producao
+        run: npm audit --omit=dev --audit-level=high
