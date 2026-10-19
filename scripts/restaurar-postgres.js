@@ -4,13 +4,18 @@
  * Restaura agendamentos de um arquivo JSON de backup para o Postgres.
  *
  * Uso:
- *   DATABASE_URL=postgres://... node scripts/restaurar-postgres.js backup.json
+ *   node scripts/restaurar-postgres.js backup.json
+ *
+ * A configuracao vem do `.env` local (ignorado pelo git) ou da variavel de
+ * ambiente DATABASE_URL. O valor nunca e impresso.
  *
  * Regras:
  * - nao apaga o que ja existe no banco;
  * - nao sobrescreve registros com o mesmo id;
  * - mostra apenas contagens, nunca dados pessoais.
  */
+
+require('../lib/env').carregarEnv();
 
 const fs = require('fs');
 const { Pool } = require('pg');
