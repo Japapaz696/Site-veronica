@@ -581,7 +581,13 @@ function createApp(options = {}) {
 // O pool só é criado no processo real do servidor, nunca em testes.
 function criarPoolSeConfigurado() {
   const url = process.env.DATABASE_URL;
-  if (!url) return null;
+  if (!url) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('ERRO: DATABASE_URL ausente em producao. O armazenamento em arquivo JSON e efemero no Render e nao e seguro para agendamentos.');
+      process.exit(1);
+    }
+    return null;
+  }
   const { Pool } = require('pg');
   const usaSsl = process.env.DATABASE_SSL !== 'false';
   return new Pool({
