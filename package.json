@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node --test tests/security.test.js tests/repository.test.js tests/api.test.js",
+    "test": "node --test tests/security.test.js tests/frontend-xss.test.js tests/repository.test.js tests/api.test.js",
     "test:postgres": "node --test tests/postgres.test.js",
     "migrar:postgres": "node scripts/migrar-para-postgres.js",
     "conferir:config": "node scripts/conferir-config.js",

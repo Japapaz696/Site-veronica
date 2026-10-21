@@ -255,21 +255,21 @@
                     <div class="agendamento-info">
                         <div class="info-row">
                             <span class="info-icon">Data</span>
-                            <span>${formatarData(agendamento.data)}</span>
+                            <span>${escapeHtml(formatarData(agendamento.data))}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-icon">⏰</span>
-                            <span>${agendamento.hora}</span>
+                            <span>${escapeHtml(agendamento.hora)}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-icon">👤</span>
-                            <span>${agendamento.nome}</span>
+                            <span>${escapeHtml(agendamento.nome)}</span>
                         </div>
                     </div>
                     ${!passado ? `
                         <div class="agendamento-acoes">
-                            <button class="btn btn-outline btn-cancelar" data-id="${agendamento.id}">Cancelar</button>
-                            <button class="btn btn-whatsapp" onclick="enviarWhatsApp(${agendamento.id})">
+                            <button class="btn btn-outline btn-cancelar" data-id="${Number(agendamento.id)}">Cancelar</button>
+                            <button class="btn btn-whatsapp btn-enviar-whatsapp" data-id="${Number(agendamento.id)}">
                                 <span>📱</span> WhatsApp
                             </button>
                         </div>
@@ -279,11 +279,19 @@
                 lista.appendChild(card);
             });
 
-            // Adicionar eventos aos botões de cancelar
+            // Adicionar eventos aos botões de cancelar (o id vem de data-*, nunca
+            // interpolado dentro de um onclick inline).
             document.querySelectorAll('.btn-cancelar').forEach(btn => {
                 btn.addEventListener('click', async () => {
                     const id = parseInt(btn.dataset.id);
                     await abrirModalCancelar(id);
+                });
+            });
+
+            // Eventos dos botões de WhatsApp da lista
+            document.querySelectorAll('.btn-enviar-whatsapp').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    enviarWhatsApp(parseInt(btn.dataset.id));
                 });
             });
         }

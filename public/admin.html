@@ -504,11 +504,11 @@
                 slot.className = 'timeline-slot ocupado' + (passou ? ' passado' : '');
                 const tipoIcon = agendamento.tipo === 'online' ? '💻' : '🏢';
                 slot.innerHTML = `
-                    <div class="timeline-horario">${hora}</div>
+                    <div class="timeline-horario">${escapeHtml(hora)}</div>
                     <div class="timeline-paciente">
                         <span style="font-size: 1.5rem;">${tipoIcon}</span>
                         <div class="timeline-paciente-info">
-                            <div class="timeline-paciente-nome">${agendamento.nome}</div>
+                            <div class="timeline-paciente-nome">${escapeHtml(agendamento.nome)}</div>
                             <div class="timeline-paciente-tipo">${agendamento.tipo === 'online' ? 'Atendimento Online' : 'Atendimento Presencial'}</div>
                         </div>
                     </div>
@@ -517,7 +517,7 @@
             } else {
                 slot.className = 'timeline-slot livre';
                 slot.innerHTML = `
-                    <div class="timeline-horario">${hora}</div>
+                    <div class="timeline-horario">${escapeHtml(hora)}</div>
                     <div class="timeline-paciente" style="color: var(--text-muted);">
                         <span style="font-size: 1.25rem;">⭕</span>
                         <span>Horário livre - Clique para agendar</span>
@@ -678,26 +678,41 @@
                     <div class="agendamento-header" style="margin-bottom: var(--spacing-sm);">
                         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                             <span class="tipo-icon-small">${tipoIcon}</span>
-                            <strong style="font-size: var(--text-xl);">${ag.nome}</strong>
+                            <strong style="font-size: var(--text-xl);">${escapeHtml(ag.nome)}</strong>
                             ${veioDaSite ? '<span style="background: #e3f2fd; color: #1976d2; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: var(--text-xs); font-weight: 600;">🌐 Do site</span>' : ''}
                             ${ag.confirmado ? '<span style="color: var(--success); font-size: var(--text-sm);">✓ Confirmado</span>' : ''}
                         </div>
                         ${passado ? '<span class="agendamento-badge realizado">✓ Realizado</span>' : (ehHoje(ag.data) ? '<span class="agendamento-badge" style="background: var(--success); color: white;">🔔 Hoje</span>' : '<span class="agendamento-badge proximo">Próximo</span>')}
                     </div>
                     <div class="admin-agendamento-info">
-                        <div><strong>📅 Data:</strong> ${formatarData(ag.data)}</div>
-                        <div><strong>⏰ Horário:</strong> ${ag.hora}</div>
-                        ${ag.telefone ? `<div><strong>📱 Telefone:</strong> <a href="tel:${ag.telefone}" style="color: var(--accent);">${ag.telefone}</a></div>` : ''}
-                        ${ag.email ? `<div><strong>📧 Email:</strong> <a href="mailto:${ag.email}" style="color: var(--accent);">${ag.email}</a></div>` : ''}
-                        ${ag.mensagem ? `<div><strong>💬 Observações:</strong> ${ag.mensagem}</div>` : ''}
+                        <div><strong>📅 Data:</strong> ${escapeHtml(formatarData(ag.data))}</div>
+                        <div><strong>⏰ Horário:</strong> ${escapeHtml(ag.hora)}</div>
+                        ${ag.telefone ? `<div><strong>📱 Telefone:</strong> <a href="tel:${encodeURIComponent(ag.telefone)}" style="color: var(--accent);">${escapeHtml(ag.telefone)}</a></div>` : ''}
+                        ${ag.email ? `<div><strong>📧 Email:</strong> <a href="mailto:${encodeURIComponent(ag.email)}" style="color: var(--accent);">${escapeHtml(ag.email)}</a></div>` : ''}
+                        ${ag.mensagem ? `<div><strong>💬 Observações:</strong> ${escapeHtml(ag.mensagem)}</div>` : ''}
                     </div>
                     <div class="admin-agendamento-acoes">
-                        <button class="btn btn-primary btn-small" onclick="verDetalhes(${ag.id})">👁️ Detalhes</button>
-                        <button class="btn btn-outline btn-small" onclick="editarAgendamento(${ag.id})">✏️ Editar</button>
-                        ${ag.telefone ? `<button class="btn btn-whatsapp btn-small" onclick="contatarPaciente('${ag.telefone}', '${ag.nome}', '${ag.data}', '${ag.hora}')">📱 WhatsApp</button>` : ''}
-                        <button class="btn btn-outline btn-small" style="color: var(--error); border-color: var(--error);" onclick="excluirAgendamento(${ag.id})">🗑️ Excluir</button>
+                        <button class="btn btn-primary btn-small" data-acao="detalhes" data-id="${Number(ag.id)}">👁️ Detalhes</button>
+                        <button class="btn btn-outline btn-small" data-acao="editar" data-id="${Number(ag.id)}">✏️ Editar</button>
+                        ${ag.telefone ? `<button class="btn btn-whatsapp btn-small" data-acao="whatsapp" data-id="${Number(ag.id)}">📱 WhatsApp</button>` : ''}
+                        <button class="btn btn-outline btn-small" style="color: var(--error); border-color: var(--error);" data-acao="excluir" data-id="${Number(ag.id)}">🗑️ Excluir</button>
                     </div>
                 `;
+
+                // Ações ligadas por listener com o id vindo de data-* — nunca por
+                // onclick inline com dados do paciente interpolados no JS.
+                card.querySelectorAll('[data-acao]').forEach((botao) => {
+                    botao.addEventListener('click', () => {
+                        const id = Number(botao.dataset.id);
+                        switch (botao.dataset.acao) {
+                            case 'detalhes': verDetalhes(id); break;
+                            case 'editar': editarAgendamento(id); break;
+                            case 'whatsapp': contatarAgendamento(ag); break;
+                            case 'excluir': excluirAgendamento(id); break;
+                        }
+                    });
+                });
+
                 lista.appendChild(card);
             });
 
@@ -723,9 +738,15 @@
 
         // ===== FUNÇÕES GLOBAIS =====
         window.contatarPaciente = (telefone, nome, data, hora) => {
-            const tel = telefone.replace(/\D/g, '');
+            const tel = String(telefone || '').replace(/\D/g, '');
             const mensagem = `Olá ${nome}! Confirmando sua consulta para ${formatarDataCurta(data)} às ${hora}. Qualquer dúvida, estou à disposição!`;
             window.open(`https://wa.me/${tel}?text=${encodeURIComponent(mensagem)}`, '_blank');
+        };
+
+        // Versão usada pelos cards: recebe o objeto do agendamento, sem
+        // interpolar dados do paciente em atributos de evento.
+        window.contatarAgendamento = (ag) => {
+            window.contatarPaciente(ag.telefone, ag.nome, ag.data, ag.hora);
         };
 
         window.excluirAgendamento = async (id) => {
@@ -776,18 +797,18 @@
             const detalhes = `
                 <div style="display: grid; gap: var(--spacing-md);">
                     <div>
-                        <h3 style="font-size: var(--text-2xl); margin-bottom: var(--spacing-xs);">${ag.nome}</h3>
+                        <h3 style="font-size: var(--text-2xl); margin-bottom: var(--spacing-xs);">${escapeHtml(ag.nome)}</h3>
                         <p style="color: var(--text-muted);">${tipoTexto}</p>
                     </div>
 
                     <div class="resumo-agendamento">
                         <div class="resumo-item">
                             <span class="resumo-label">Data:</span>
-                            <span class="resumo-valor">${formatarData(ag.data)}</span>
+                            <span class="resumo-valor">${escapeHtml(formatarData(ag.data))}</span>
                         </div>
                         <div class="resumo-item">
                             <span class="resumo-label">Horário:</span>
-                            <span class="resumo-valor">${ag.hora}</span>
+                            <span class="resumo-valor">${escapeHtml(ag.hora)}</span>
                         </div>
                         <div class="resumo-item">
                             <span class="resumo-label">Status:</span>
@@ -802,22 +823,22 @@
                     ${ag.telefone || ag.email ? `
                         <div>
                             <h4 style="margin-bottom: var(--spacing-sm);">Contato</h4>
-                            ${ag.telefone ? `<p>📱 <a href="tel:${ag.telefone}" style="color: var(--accent);">${ag.telefone}</a></p>` : ''}
-                            ${ag.email ? `<p>📧 <a href="mailto:${ag.email}" style="color: var(--accent);">${ag.email}</a></p>` : ''}
+                            ${ag.telefone ? `<p>📱 <a href="tel:${encodeURIComponent(ag.telefone)}" style="color: var(--accent);">${escapeHtml(ag.telefone)}</a></p>` : ''}
+                            ${ag.email ? `<p>📧 <a href="mailto:${encodeURIComponent(ag.email)}" style="color: var(--accent);">${escapeHtml(ag.email)}</a></p>` : ''}
                         </div>
                     ` : ''}
 
                     ${ag.mensagem ? `
                         <div>
                             <h4 style="margin-bottom: var(--spacing-sm);">Observações</h4>
-                            <p style="color: var(--text-light); line-height: 1.7;">${ag.mensagem}</p>
+                            <p style="color: var(--text-light); line-height: 1.7;">${escapeHtml(ag.mensagem)}</p>
                         </div>
                     ` : ''}
 
                     <div style="padding-top: var(--spacing-md); border-top: 1px solid var(--line);">
                         <p style="font-size: var(--text-sm); color: var(--text-muted);">
-                            ID: ${ag.id}<br>
-                            Criado em: ${new Date(ag.criadoEm).toLocaleString('pt-BR')}
+                            ID: ${Number(ag.id)}<br>
+                            Criado em: ${escapeHtml(new Date(ag.criadoEm).toLocaleString('pt-BR'))}
                         </p>
                     </div>
                 </div>

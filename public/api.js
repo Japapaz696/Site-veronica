@@ -76,8 +76,64 @@ async function apiDelete(path, token) {
     return apiRequest(path, { method: 'DELETE', token });
 }
 
+// === ESCAPE DE DADOS NÃO CONFIÁVEIS ===
+//
+// Os agendamentos chegam pelo formulário público: nome, telefone, e-mail e
+// observação são digitados por qualquer visitante. Toda vez que um desses
+// valores entra em `innerHTML` (cards do painel, timeline, modal de detalhes,
+// página "meus agendamentos") ele vira HTML se não for escapado — é a falha de
+// XSS armazenado. Escapar na saída é a correção certa: o dado continua íntegro
+// na API e só é neutralizado no momento de renderizar.
+
+/**
+ * Escapa uma string para uso seguro dentro de HTML.
+ *
+ * Cobre os cinco caracteres que importam para sair de um nó de texto ou de um
+ * valor de atributo entre aspas: `&`, `<`, `>`, `"` e `'`. A ordem importa —
+ * o `&` precisa ser o primeiro para não reescapar as entidades geradas.
+ */
+function escapeHtml(valor) {
+    if (valor === null || valor === undefined) {
+        return '';
+    }
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
+ * Escapa um valor para uso como argumento literal dentro de um atributo de
+ * evento inline (`onclick="...('valor')"`).
+ *
+ * Aspas simples são o delimitador do argumento, então escapá-las via
+ * `escapeHtml` já impede o fechamento da string. O escape adicional de barra
+ * invertida e de quebras de linha evita que o valor monte uma segunda instrução
+ * JavaScript. Preferir sempre `data-*` + `addEventListener` quando possível.
+ */
+function escapeJsAttr(valor) {
+    if (valor === null || valor === undefined) {
+        return '';
+    }
+    return escapeHtml(valor)
+        .replace(/\\/g, '&#92;')
+        .replace(/\r/g, '&#13;')
+        .replace(/\n/g, '&#10;');
+}
+
 // Disponivel no navegador (script classico) e no Node, para os testes.
-const api = { API_BASE, apiRequest, apiGet, apiPost, apiPut, apiDelete };
+const api = {
+    API_BASE,
+    apiRequest,
+    apiGet,
+    apiPost,
+    apiPut,
+    apiDelete,
+    escapeHtml,
+    escapeJsAttr,
+};
 
 if (typeof window !== 'undefined') {
     window.api = api;
@@ -86,6 +142,8 @@ if (typeof window !== 'undefined') {
     window.apiPost = apiPost;
     window.apiPut = apiPut;
     window.apiDelete = apiDelete;
+    window.escapeHtml = escapeHtml;
+    window.escapeJsAttr = escapeJsAttr;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
